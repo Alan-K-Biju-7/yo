@@ -5,6 +5,8 @@ plugins {
 }
 
 android {
+    // This research build deliberately uses a neutral namespace rather than
+    // claiming the package identity of the official institution application.
     namespace = "com.example.rset_student_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
@@ -15,7 +17,6 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.rset_student_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -27,8 +28,8 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Produces an installable research/testing APK without storing a
+            // private production keystore in the repository.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

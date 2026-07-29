@@ -144,7 +144,7 @@ class _HomePageState extends State<HomePage> {
                               crossAxisCount: columns,
                               mainAxisSpacing: 16,
                               crossAxisSpacing: 16,
-                                  childAspectRatio: 1.02,
+                              childAspectRatio: 1.02,
                             ),
                             itemBuilder: (context, index) {
                               final item = ReferenceData.features[index];

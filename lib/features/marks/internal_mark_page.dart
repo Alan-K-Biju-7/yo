@@ -14,23 +14,6 @@ class InternalMarkPage extends StatefulWidget {
 class _InternalMarkPageState extends State<InternalMarkPage> {
   static const _classCodes = ['2026S3CS-C', '2026S2CS-C', '2025S1CS-C'];
 
-  static List<String> get _filteredExamTypes {
-    return ReferenceData.examTypes.where((type) {
-      final lower = type.toLowerCase();
-      if (lower.contains('re-test') || lower.contains('attendance')) {
-        return false;
-      }
-      if (lower.contains('module 6') || lower.contains('course project')) {
-        return false;
-      }
-      return true;
-    }).toList();
-  }
-
-  List<String> get _availableExamTypes {
-    return _dataByClassAndExam[_classCode]?.keys.toList() ?? _filteredExamTypes;
-  }
-
   static const _dataByClassAndExam = {
     '2026S2CS-C': {
       'Internal Exam 1': _InternalMarkData(
@@ -93,7 +76,8 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
         subjects: [
           _SubjectDetail('102906/PH900A', 'Engineering Physics A'),
           _SubjectDetail('102908/MA100B', 'Calculus and Linear Algebra'),
-          _SubjectDetail('102903/CO100F', 'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102903/CO100F',
+              'Introduction to Electrical and Electronics Engineering'),
           _SubjectDetail('102908/EN900G', 'English for Engineers'),
         ],
       ),
@@ -107,7 +91,8 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
         subjects: [
           _SubjectDetail('102906/PH900A', 'Engineering Physics A'),
           _SubjectDetail('102908/MA100B', 'Calculus and Linear Algebra'),
-          _SubjectDetail('102903/CO100F', 'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102903/CO100F',
+              'Introduction to Electrical and Electronics Engineering'),
           _SubjectDetail('102908/EN900G', 'English for Engineers'),
         ],
       ),
@@ -119,7 +104,8 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
         ],
         subjects: [
           _SubjectDetail('102908/MA100B', 'Calculus and Linear Algebra'),
-          _SubjectDetail('102906/CO100E', 'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102906/CO100E',
+              'Introduction to Electrical and Electronics Engineering'),
           _SubjectDetail('102908/EN900G', 'English for Engineers'),
         ],
       ),
@@ -128,7 +114,8 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
           _MarkRow('102906/CO100E', '6.5'),
         ],
         subjects: [
-          _SubjectDetail('102906/CO100E', 'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102906/CO100E',
+              'Introduction to Electrical and Electronics Engineering'),
         ],
       ),
     },
@@ -166,7 +153,7 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
           _OutlinedDropdown(
             label: 'Select Exam Type',
             value: _examType,
-            options: _availableExamTypes,
+            options: ReferenceData.examTypes,
             onChanged: (value) => setState(() => _examType = value),
           ),
           if (selectedData != null) ...[
@@ -263,7 +250,11 @@ class _MarksTable extends StatelessWidget {
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
-                  SizedBox(width: 80, child: Text(mark.mark, textAlign: TextAlign.right, style: const TextStyle(fontSize: 16))),
+                  SizedBox(
+                      width: 80,
+                      child: Text(mark.mark,
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(fontSize: 16))),
                 ],
               ),
               const Divider(height: 18, thickness: 1, color: Color(0xFFE1E1E1)),

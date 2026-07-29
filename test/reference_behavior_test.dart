@@ -62,10 +62,6 @@ void main() {
       260,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.drag(
-      find.byType(CustomScrollView),
-      const Offset(0, -220),
-    );
     await tester.pumpAndSettle();
     await tester.tap(notices);
     await tester.pumpAndSettle();
@@ -85,14 +81,20 @@ void main() {
   });
 
   testWidgets('Internal Mark exposes the supplied exam types', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(720, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpScreen(tester, const InternalMarkPage());
 
     await tester.tap(find.text('Select Exam Type'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Internal Exam 1'), findsOneWidget);
-    expect(find.text('Internal Exam 2'), findsOneWidget);
-    expect(find.text('Attendance'), findsOneWidget);
+    for (final examType in ReferenceData.examTypes) {
+      expect(
+        find.text(examType, skipOffstage: false),
+        findsAtLeast(1),
+        reason: 'Missing Internal Mark option: $examType',
+      );
+    }
   });
 
   testWidgets('Academic Calendar moves between months', (tester) async {

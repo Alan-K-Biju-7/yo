@@ -243,29 +243,6 @@ class _OfficialLogoCrop extends StatelessWidget {
   final double imageHeight;
   final Alignment alignment;
 
-  static const _whiteTransparentFilter = ColorFilter.matrix([
-    -2.2,
-    0,
-    0,
-    0,
-    585,
-    0,
-    -0.795,
-    0,
-    0,
-    287,
-    0,
-    0,
-    -0.419,
-    0,
-    272,
-    0,
-    0,
-    0,
-    1,
-    0,
-  ]);
-
   @override
   Widget build(BuildContext context) {
     return ClipRect(
