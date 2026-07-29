@@ -92,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 23),
                         SizedBox(
                           width: double.infinity,
-                          height: 64,
+                          height: 68,
                           child: FilledButton(
                             onPressed: _submitting ? null : _login,
                             style: FilledButton.styleFrom(
@@ -100,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
                               disabledBackgroundColor: Colors.white70,
                               foregroundColor: AppColors.accent,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                             child: _submitting
@@ -150,7 +150,7 @@ class _LoginField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 65,
+      height: 68,
       child: TextField(
         controller: controller,
         obscureText: obscureText,
@@ -171,11 +171,11 @@ class _LoginField extends StatelessWidget {
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 14),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: Colors.white, width: 1.2),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: Colors.white, width: 1.7),
           ),
         ),
@@ -195,13 +195,13 @@ class RsetBrandMark extends StatelessWidget {
     return Semantics(
       label: 'RSET, Rajagiri School of Engineering and Technology',
       child: SizedBox(
-        width: 150 * scale,
-        height: 184 * scale,
+        width: 170 * scale,
+        height: 210 * scale,
         child: FittedBox(
           fit: BoxFit.contain,
           child: const SizedBox(
-            width: 150,
-            height: 184,
+            width: 170,
+            height: 210,
             child: Column(
               children: [
                 _OfficialLogoCrop(
@@ -278,14 +278,13 @@ class _OfficialLogoCrop extends StatelessWidget {
           maxWidth: imageWidth,
           minHeight: imageHeight,
           maxHeight: imageHeight,
-          child: ColorFiltered(
-            colorFilter: _whiteTransparentFilter,
-            child: Image.asset(
-              'assets/images/rset_official_logo.jpg',
-              width: imageWidth,
-              height: imageHeight,
-              fit: BoxFit.fill,
-            ),
+          child: Image.asset(
+            'assets/images/rset_official_logo.png',
+            width: imageWidth,
+            height: imageHeight,
+            fit: BoxFit.contain,
+            color: Colors.white,
+            colorBlendMode: BlendMode.srcIn,
           ),
         ),
       ),

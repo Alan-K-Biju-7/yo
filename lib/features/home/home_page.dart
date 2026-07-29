@@ -70,6 +70,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom + 72;
     return Scaffold(
       appBar: ReferenceAppBar(
         title: 'Home',
@@ -88,7 +89,7 @@ class _HomePageState extends State<HomePage> {
               key: const PageStorageKey<String>('home-scroll'),
               slivers: [
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+                  padding: EdgeInsets.fromLTRB(20, 20, 20, 18 + bottomPad),
                   sliver: SliverList.list(
                     children: [
                       const StudentSummaryCard(),
@@ -143,7 +144,7 @@ class _HomePageState extends State<HomePage> {
                               crossAxisCount: columns,
                               mainAxisSpacing: 16,
                               crossAxisSpacing: 16,
-                              childAspectRatio: .95,
+                                  childAspectRatio: 1.02,
                             ),
                             itemBuilder: (context, index) {
                               final item = ReferenceData.features[index];
@@ -377,17 +378,18 @@ class _FeatureTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(13),
+      elevation: 4,
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(item.icon, size: 32, color: AppColors.primary),
-              const SizedBox(height: 14),
+              Icon(item.icon, size: 36, color: AppColors.primary),
+              const SizedBox(height: 10),
               Text(
                 item.label,
                 textAlign: TextAlign.center,
