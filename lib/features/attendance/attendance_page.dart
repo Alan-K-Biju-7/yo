@@ -10,19 +10,137 @@ class AttendancePage extends StatefulWidget {
   State<AttendancePage> createState() => _AttendancePageState();
 }
 
+class AttendanceRow {
+  const AttendanceRow(this.date, this.periods);
+
+  final String date;
+  final List<String> periods;
+}
+
 class _AttendancePageState extends State<AttendancePage> {
   static const _classCodes = ['2026S3CS-C', '2026S2CS-C', '2025S1CS-C'];
-  static const _periodValues = [
-    '102802/C0300A',
-    '102903/C0300B',
-    '102902/C0300D',
-    '102903/C0322S',
-    '102903/C0322S',
-    '102903/C0322S',
-    '',
-  ];
+
+  static const _attendanceByClass = {
+    '2026S3CS-C': [
+      AttendanceRow('07/01/2026', [
+        '102802/C0300A',
+        '102903/C0300B',
+        '102902/C0300D',
+        '102903/C0322S',
+        '102903/C0322S',
+        '102903/C0322S',
+        '',
+      ]),
+    ],
+    '2026S2CS-C': [
+      AttendanceRow('12/10/2025', [
+        '102903/MA200B',
+        '102903/CE200C',
+        '102908/CH900A',
+        '102908/ME900D',
+        '102908/CH900A',
+        '102908/CO200F',
+        '',
+      ]),
+      AttendanceRow('01/21/2026', [
+        '',
+        '',
+        '102908/CH900A',
+        '102908/ME900D',
+        '102903/MA200B',
+        '',
+        '',
+      ]),
+      AttendanceRow('01/22/2026', [
+        '102902/CO200F',
+        '102902/CO200F',
+        '',
+        '102903/MA200B',
+        '',
+        '',
+        '',
+      ]),
+      AttendanceRow('01/23/2026', [
+        '102906/CO922S-B2',
+        '102906/CO922S-B2',
+        '102908/CH900A',
+        '402909/CO901R',
+        '102903/CE200C',
+        '102903/MA200B',
+        '102908/CH900A',
+      ]),
+      AttendanceRow('02/09/2026', [
+        '102908/ME900D',
+        '102908/ME900D',
+        '102902/CO200F',
+        '102903/MA200B',
+        '102902/CO200F',
+        '102908/CH900A',
+        '',
+      ]),
+      AttendanceRow('03/19/2026', [
+        '102902/CO200F',
+        '102902/CO200F',
+        '',
+        '',
+        '',
+        '',
+        '',
+      ]),
+    ],
+    '2025S1CS-C': [
+      AttendanceRow('10/10/2025', [
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+      ]),
+      AttendanceRow('10/24/2025', [
+        '',
+        '',
+        '102906/PH900A',
+        '',
+        '102906/CO100E',
+        '',
+        '',
+      ]),
+      AttendanceRow('10/30/2025', [
+        '102908/MA100B',
+        '102908/MA100B',
+        '102906/CO100E',
+        '102906/PH900A',
+        '102906/PH900A',
+        '102903/CO100F',
+        '102903/CO100F',
+      ]),
+      AttendanceRow('10/31/2025', [
+        '102903/CO100F',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+      ]),
+      AttendanceRow('11/14/2025', [
+        '102903/CO100F',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+      ]),
+    ],
+  };
 
   String _classCode = _classCodes.first;
+
+  List<AttendanceRow> get _currentRows =>
+      _attendanceByClass[_classCode] ?? const <AttendanceRow>[];
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +152,7 @@ class _AttendancePageState extends State<AttendancePage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: DropdownButtonFormField<String>(
-              initialValue: _classCode,
+              value: _classCode,
               icon: const Icon(Icons.arrow_drop_down, size: 30),
               style: const TextStyle(color: AppColors.ink, fontSize: 20),
               decoration: InputDecoration(
@@ -87,21 +205,25 @@ class _AttendancePageState extends State<AttendancePage> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const SizedBox(
-                          width: 100,
-                          child: Center(
-                            child: Text(
-                              '07/01/2026',
-                              style: TextStyle(fontSize: 16),
+                    for (final row in _currentRows) ...[
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 100,
+                            height: 41,
+                            child: Center(
+                              child: Text(
+                                row.date,
+                                style: const TextStyle(fontSize: 16),
+                              ),
                             ),
                           ),
-                        ),
-                        for (final value in _periodValues)
-                          _AttendanceCell(value: value),
-                      ],
-                    ),
+                          for (final value in row.periods)
+                            _AttendanceCell(value: value),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   ],
                 ),
               ),
