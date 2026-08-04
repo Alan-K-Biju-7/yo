@@ -95,6 +95,10 @@ void main() {
 
     expect(find.text('Internal Exam 1'), findsOneWidget);
     expect(find.text('Internal Exam 2'), findsOneWidget);
+    expect(find.text('Assignment/ Assignment Test/ S...'), findsOneWidget);
+    expect(find.text('Assignment-1/Assignment Test/...'), findsOneWidget);
+    expect(find.text('Re-Test 1'), findsOneWidget);
+    expect(find.text('Re-Test 2'), findsOneWidget);
     expect(find.text('Attendance'), findsNothing);
   });
 

@@ -39,8 +39,7 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
   }
 
   List<String> get _availableExamTypes {
-    final values = _dataByClassAndExam[_classCode]?.keys.toList() ??
-        List<String>.from(_filteredExamTypes);
+    final values = List<String>.from(_filteredExamTypes);
     if (_liveData != null && !values.contains(_liveExamType)) {
       values.insert(0, _liveExamType);
     }
