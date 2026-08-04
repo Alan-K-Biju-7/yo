@@ -15,15 +15,8 @@ class AttendancePage extends StatefulWidget {
   State<AttendancePage> createState() => _AttendancePageState();
 }
 
-class AttendanceRow {
-  const AttendanceRow(this.date, this.periods);
-
-  final String date;
-  final List<String> periods;
-}
-
 class _AttendancePageState extends State<AttendancePage> {
-  static const _classCodes = ['2026S3CS-C', '2026S2CS-C', '2025S1CS-C'];
+  String _classCode = AttendanceReferenceRepository.classCodes.first;
 
   String _classCode = _classCodes.first;
   List<AttendanceRow> _currentRows = [];
@@ -138,7 +131,7 @@ class _AttendancePageState extends State<AttendancePage> {
                 ),
               ),
               items: [
-                for (final code in _classCodes)
+                for (final code in AttendanceReferenceRepository.classCodes)
                   DropdownMenuItem(value: code, child: Text(code)),
               ],
               onChanged: (value) {
