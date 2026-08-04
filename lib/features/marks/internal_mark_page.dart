@@ -18,6 +18,14 @@ class InternalMarkPage extends StatefulWidget {
 
 class _InternalMarkPageState extends State<InternalMarkPage> {
   static const _classCodes = ['2026S3CS-C', '2026S2CS-C', '2025S1CS-C'];
+  static const _liveExamType = 'Internal Exam 1';
+
+  static const _subjectNames = {
+    '102906/PH900A': 'Engineering Physics A',
+    '102908/MA100B': 'Calculus and Linear Algebra',
+    '102903/CO100F': 'Introduction to Electrical and Electronics Engineering',
+    '102908/EN900G': 'English for Engineers',
+  };
 
   static List<String> get _filteredExamTypes {
     // Include all exam types except explicit exclusions. The design requires
@@ -33,7 +41,9 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
   List<String> get _availableExamTypes {
     final values = _dataByClassAndExam[_classCode]?.keys.toList() ??
         List<String>.from(_filteredExamTypes);
-    if (_liveData != null) values.insert(0, 'Latest published marks');
+    if (_liveData != null && !values.contains(_liveExamType)) {
+      values.insert(0, _liveExamType);
+    }
     return values;
   }
 
@@ -187,11 +197,11 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
                 subjects: marks
                     .map((mark) => _SubjectDetail(
                           mark.subjectCode,
-                          mark.subjectCode,
+                          _subjectNames[mark.subjectCode] ?? mark.subjectCode,
                         ))
                     .toList(),
               );
-        if (_liveData != null) _examType = 'Latest published marks';
+        if (_liveData != null) _examType = _liveExamType;
         _loadError = null;
         _loading = false;
       });
@@ -212,7 +222,7 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
 
   _InternalMarkData? get _selectedData {
     if (_examType == null) return null;
-    if (_examType == 'Latest published marks') return _liveData;
+    if (_examType == _liveExamType && _liveData != null) return _liveData;
     return _dataByClassAndExam[_classCode]?[_examType!];
   }
 
@@ -377,59 +387,72 @@ class _SubjectDetailsTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
-      final double gap = (constraints.maxWidth * 0.03).clamp(12.0, 32.0);
+      const tableWidth = 820.0;
+      const codeColumnWidth = 215.0;
+      const gap = 28.0;
 
-      return Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          child: Column(
-            children: [
-              Row(
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: constraints.maxWidth > tableWidth
+              ? constraints.maxWidth
+              : tableWidth,
+          child: Card(
+            elevation: 2,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              child: Column(
                 children: [
-                  const Expanded(
-                    child: Text(
-                      'Subject Code',
-                      style:
-                          TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                    ),
+                  Row(
+                    children: [
+                      const SizedBox(
+                        width: codeColumnWidth,
+                        child: Text(
+                          'Subject Code',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 16),
+                        ),
+                      ),
+                      SizedBox(width: gap),
+                      const Expanded(
+                        child: Text(
+                          'Subject Name',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 16),
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: gap),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'Subject Name',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 16),
+                  const Divider(height: 22, thickness: 1.2),
+                  for (final subject in data.subjects) ...[
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: codeColumnWidth,
+                          child: Text(
+                            subject.subjectCode,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                        SizedBox(width: gap),
+                        Expanded(
+                          child: Text(
+                            subject.subjectName,
+                            maxLines: 1,
+                            overflow: TextOverflow.visible,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                    const Divider(
+                        height: 18, thickness: 1, color: Color(0xFFE1E1E1)),
+                  ],
                 ],
               ),
-              const Divider(height: 22, thickness: 1.2),
-              for (final subject in data.subjects) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        subject.subjectCode,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    SizedBox(width: gap),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        subject.subjectName,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ],
-                ),
-                const Divider(
-                    height: 18, thickness: 1, color: Color(0xFFE1E1E1)),
-              ],
-            ],
+            ),
           ),
         ),
       );
