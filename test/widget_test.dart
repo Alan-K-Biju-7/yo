@@ -14,7 +14,7 @@ void main() {
     final sessionStore = await SessionStore.load();
     await tester.pumpWidget(RsetStudentApp(sessionStore: sessionStore));
 
-    expect(find.text('U2503208'), findsOneWidget);
+    expect(find.text('Username'), findsOneWidget);
     await sessionStore.signIn(
       accessToken: 'test-token',
       studentId: 'student',
@@ -29,7 +29,7 @@ void main() {
     await tester.tap(find.byTooltip('Logout'));
     await tester.pumpAndSettle();
 
-    expect(find.text('U2503208'), findsOneWidget);
+    expect(find.text('Username'), findsOneWidget);
     expect((await SessionStore.load()).isSignedIn, isFalse);
   });
 }

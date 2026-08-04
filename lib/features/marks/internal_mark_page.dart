@@ -557,7 +557,7 @@ class _SubjectDetailsTable extends StatelessWidget {
                           child: Text(
                             subject.subjectName,
                             maxLines: 1,
-                            overflow: TextOverflow.visible,
+                            overflow: TextOverflow.clip,
                             style: const TextStyle(fontSize: 16),
                           ),
                         ),
@@ -637,11 +637,12 @@ class _OutlinedDropdown extends StatelessWidget {
               width: double.infinity,
               child: Text(
                 option,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
-                softWrap: true,
               ),
             ),
           ),
