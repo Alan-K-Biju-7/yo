@@ -8,12 +8,19 @@ class NoticesRepository:
         self.db = db
         self.collection = db.notices
 
-    async def create_notice(self, title: str, file_url: str, is_exam_notice: bool = False):
+    async def create_notice(
+        self,
+        title: str,
+        file_url: str,
+        is_exam_notice: bool = False,
+        file_id: str | None = None,
+    ):
         """Create a new notice"""
         document = {
             "title": title,
             "file_url": file_url,
             "is_exam_notice": is_exam_notice,
+            "file_id": file_id,
             "upload_date": datetime.utcnow(),
         }
         result = await self.collection.insert_one(document)
@@ -31,6 +38,7 @@ class NoticesRepository:
             "file_url": record["file_url"],
             "upload_date": record["upload_date"].isoformat(),
             "is_exam_notice": record["is_exam_notice"],
+            "file_id": record.get("file_id"),
         } for record in records]
 
     async def delete_notice(self, notice_id: str):
@@ -54,4 +62,5 @@ class NoticesRepository:
             "file_url": record["file_url"],
             "upload_date": record["upload_date"].isoformat(),
             "is_exam_notice": record["is_exam_notice"],
+            "file_id": record.get("file_id"),
         }

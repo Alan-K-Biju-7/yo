@@ -1,4 +1,4 @@
-from passlib.context import CryptContext
+import bcrypt
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from typing import Optional
@@ -6,19 +6,26 @@ from app.repositories.admin import AdminRepository
 from app.database.connection import get_db
 import os
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 ALGORITHM = "HS256"
 ADMIN_SECRET_KEY = os.getenv("ADMIN_SECRET_KEY", "your-admin-secret-key-change-this")
 ADMIN_ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt(),
+    ).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"),
+            hashed_password.encode("utf-8"),
+        )
+    except (TypeError, ValueError):
+        return False
 
 
 def create_admin_access_token(data: dict, expires_delta: Optional[timedelta] = None):

@@ -1,5 +1,7 @@
 // Configuration
-const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = window.location.port === "8080"
+    ? "http://localhost:8001/api"
+    : `${window.location.origin}/api`;
 let adminToken = localStorage.getItem("adminToken");
 let adminName = localStorage.getItem("adminName");
 

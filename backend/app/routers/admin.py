@@ -13,15 +13,11 @@ from app.schemas.models import (
     AdminLogin, AdminCreate, AttendanceEntry, AttendanceDelete,
     MarksEntry, NoticeCreate, EventCreate, WSMessage
 )
-from pathlib import Path
-import shutil
+from bson import ObjectId
+from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 security = HTTPBearer()
-
-UPLOAD_DIR = Path("uploads/notices")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
 
 async def verify_admin_token(
     credentials: HTTPAuthorizationCredentials = Depends(security),
@@ -225,18 +221,22 @@ async def upload_notice(
             detail="File size must be less than 10MB"
         )
     
-    # Save file
-    file_path = UPLOAD_DIR / file.filename
-    with open(file_path, "wb") as f:
-        f.write(contents)
-    
-    # Save to database
     db = get_db()
+    bucket = AsyncIOMotorGridFSBucket(db)
+    file_id = await bucket.upload_from_stream(
+        file.filename,
+        contents,
+        metadata={"content_type": "application/pdf"},
+    )
+    file_url = f"/api/files/{file_id}"
+
+    # Save notice metadata to the database.
     repo = NoticesRepository(db)
     notice_id = await repo.create_notice(
         title,
-        f"/uploads/notices/{file.filename}",
-        is_exam_notice
+        file_url,
+        is_exam_notice,
+        str(file_id),
     )
     
     # Broadcast update via WebSocket
@@ -245,7 +245,7 @@ async def upload_notice(
         data={
             "id": notice_id,
             "title": title,
-            "file_url": f"/uploads/notices/{file.filename}",
+            "file_url": file_url,
             "is_exam_notice": is_exam_notice,
         }
     ))
@@ -279,10 +279,11 @@ async def delete_notice(notice_id: str, username: str = Depends(verify_admin_tok
             detail="Notice not found"
         )
     
-    # Delete file
-    file_path = Path("." + notice["file_url"])
-    if file_path.exists():
-        file_path.unlink()
+    # Delete the persistent GridFS file when present. Older local-file notices
+    # remain compatible and can still be removed from the metadata collection.
+    if notice.get("file_id"):
+        bucket = AsyncIOMotorGridFSBucket(db)
+        await bucket.delete(ObjectId(notice["file_id"]))
     
     # Delete from database
     await repo.delete_notice(notice_id)

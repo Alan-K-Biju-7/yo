@@ -17,6 +17,8 @@ load_dotenv()
 
 logger = logging.getLogger("uvicorn")
 
+os.makedirs("uploads/notices", exist_ok=True)
+
 app = FastAPI(title="College Sync API", version="0.1.0")
 
 # Add CORS middleware
@@ -33,6 +35,11 @@ app.include_router(ws_router)
 
 # Serve uploaded files
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount(
+	"/admin",
+	StaticFiles(directory="../admin-dashboard", html=True),
+	name="admin-dashboard",
+)
 
 
 SYNC_INTERVAL_MINUTES = int(os.getenv("SYNC_INTERVAL_MINUTES", "30"))
@@ -69,5 +76,9 @@ async def shutdown_event():
 if __name__ == "__main__":
 	import uvicorn
 
-	uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
-
+	uvicorn.run(
+		"main:app",
+		host="0.0.0.0",
+		port=int(os.getenv("PORT", "8000")),
+		reload=False,
+	)

@@ -68,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
       value: const SystemUiOverlayStyle(
         statusBarColor: AppColors.primary,
         statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppColors.primary,
+        systemNavigationBarColor: Colors.black,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
@@ -80,23 +80,23 @@ class _LoginPageState extends State<LoginPage> {
               final landscape = constraints.maxWidth > constraints.maxHeight;
               return SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
-                  horizontal: landscape ? 48 : 18,
-                  vertical: landscape ? 20 : 28,
+                  horizontal: landscape ? 48 : 16,
+                  vertical: 0,
                 ),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),
                     child: Column(
                       children: [
-                        SizedBox(height: landscape ? 4 : 42),
+                        SizedBox(height: landscape ? 4 : 88),
                         RsetBrandMark(compact: landscape),
-                        SizedBox(height: landscape ? 24 : 42),
+                        SizedBox(height: landscape ? 20 : 42),
                         _LoginField(
                           controller: _usernameController,
                           hint: 'Username',
                           textInputAction: TextInputAction.next,
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 20),
                         _LoginField(
                           controller: _passwordController,
                           hint: 'Password',
@@ -104,10 +104,10 @@ class _LoginPageState extends State<LoginPage> {
                           textInputAction: TextInputAction.done,
                           onSubmitted: (_) => _login(),
                         ),
-                        const SizedBox(height: 23),
+                        const SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
-                          height: 68,
+                          height: 58,
                           child: FilledButton(
                             onPressed: _submitting ? null : _login,
                             style: FilledButton.styleFrom(
@@ -115,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
                               disabledBackgroundColor: Colors.white70,
                               foregroundColor: AppColors.accent,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(9),
                               ),
                             ),
                             child: _submitting
@@ -128,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                                 : const Text(
                                     'Login',
                                     style: TextStyle(
-                                      fontSize: 20,
+                                  fontSize: 20,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -165,7 +165,7 @@ class _LoginField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 68,
+      height: 58,
       child: TextField(
         controller: controller,
         obscureText: obscureText,
@@ -175,22 +175,22 @@ class _LoginField extends StatelessWidget {
         style: const TextStyle(
           color: Colors.white,
           fontFamily: 'Roboto',
-          fontSize: 22,
+          fontSize: 20,
         ),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(
             color: Colors.white,
             fontFamily: 'Roboto',
-            fontSize: 22,
+            fontSize: 20,
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 14),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: Colors.white, width: 1.2),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: Colors.white, width: 1.7),
           ),
         ),
@@ -210,74 +210,11 @@ class RsetBrandMark extends StatelessWidget {
     return Semantics(
       label: 'RSET, Rajagiri School of Engineering and Technology',
       child: SizedBox(
-        width: 170 * scale,
-        height: 210 * scale,
-        child: FittedBox(
+        width: 114 * scale,
+        height: 168 * scale,
+        child: Image.asset(
+          'assets/images/rset_official_logo_vertical.png',
           fit: BoxFit.contain,
-          child: const SizedBox(
-            width: 170,
-            height: 210,
-            child: Column(
-              children: [
-                _OfficialLogoCrop(
-                  width: 105,
-                  height: 105,
-                  imageWidth: 249,
-                  imageHeight: 141,
-                  alignment: Alignment.centerLeft,
-                ),
-                SizedBox(height: 8),
-                _OfficialLogoCrop(
-                  width: 150,
-                  height: 71,
-                  imageWidth: 258,
-                  imageHeight: 146,
-                  alignment: Alignment.centerRight,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OfficialLogoCrop extends StatelessWidget {
-  const _OfficialLogoCrop({
-    required this.width,
-    required this.height,
-    required this.imageWidth,
-    required this.imageHeight,
-    required this.alignment,
-  });
-
-  final double width;
-  final double height;
-  final double imageWidth;
-  final double imageHeight;
-  final Alignment alignment;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRect(
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: OverflowBox(
-          alignment: alignment,
-          minWidth: imageWidth,
-          maxWidth: imageWidth,
-          minHeight: imageHeight,
-          maxHeight: imageHeight,
-          child: Image.asset(
-            'assets/images/rset_official_logo.png',
-            width: imageWidth,
-            height: imageHeight,
-            fit: BoxFit.contain,
-            color: Colors.white,
-            colorBlendMode: BlendMode.srcIn,
-          ),
         ),
       ),
     );
