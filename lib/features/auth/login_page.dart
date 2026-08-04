@@ -16,8 +16,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController(text: 'U2503208');
+  final _passwordController = TextEditingController(text: '08032007');
   bool _submitting = false;
 
   @override
@@ -128,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                                 : const Text(
                                     'Login',
                                     style: TextStyle(
-                                  fontSize: 20,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),

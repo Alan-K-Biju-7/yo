@@ -48,6 +48,12 @@ class AdminLogin(BaseModel):
     password: str
 
 
+class StudentCredentialUpsert(BaseModel):
+    username: str
+    password: str
+    student_id: str
+
+
 # Attendance Models
 class AttendanceEntry(BaseModel):
     date: str  # Format: MM/DD/YYYY

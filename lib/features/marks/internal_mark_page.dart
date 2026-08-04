@@ -26,6 +26,12 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
     '102906/CO100E': 'Introduction to Electrical and Electronics Engineering',
     '102903/CO100F': 'Introduction to C Programming',
     '102908/EN900G': 'English for Engineers',
+    '102908/CH900A': 'Engineering Chemistry A',
+    '102903/MA200B': 'Complex Analysis and Linear Algebra',
+    '102903/CE200C': 'Engineering Mechanics',
+    '102908/ME900D': 'Engineering Graphics',
+    '102902/CO200F': 'Logic System Design',
+    '102906/CO922S-B2': 'Manufacturing Practice',
   };
 
   static List<String> get _filteredExamTypes {
@@ -90,10 +96,83 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
       ),
       'Assignment-1/Assignment Test/...': _InternalMarkData(
         marks: [
-          _MarkRow('102922/PH200D', '8.5'),
+          _MarkRow('102908/ME900D', '20'),
         ],
         subjects: [
-          _SubjectDetail('102922/PH200D', 'Physics for Computer Science'),
+          _SubjectDetail('102908/ME900D', 'Engineering Graphics'),
+        ],
+      ),
+      'Attendance': _InternalMarkData(
+        marks: [
+          _MarkRow('102908/CH900A', '9.1'),
+          _MarkRow('102903/MA200B', '9.1'),
+          _MarkRow('102903/CE200C', '9.4'),
+          _MarkRow('102908/ME900D', '9.5'),
+          _MarkRow('102902/CO200F', '9.1'),
+          _MarkRow('102906/CO922S-B2', '20'),
+        ],
+        subjects: [
+          _SubjectDetail('102908/CH900A', 'Engineering Chemistry A'),
+          _SubjectDetail(
+              '102903/MA200B', 'Complex Analysis and Linear Algebra'),
+          _SubjectDetail('102903/CE200C', 'Engineering Mechanics'),
+          _SubjectDetail('102908/ME900D', 'Engineering Graphics'),
+          _SubjectDetail('102902/CO200F', 'Logic System Design'),
+          _SubjectDetail('102906/CO922S-B2', 'Manufacturing Practice'),
+        ],
+      ),
+      'Lab work/ Record/Viva-voce': _InternalMarkData(
+        marks: [
+          _MarkRow('102908/CH900A', '86.5'),
+          _MarkRow('102902/CO200F', '35'),
+        ],
+        subjects: [
+          _SubjectDetail('102908/CH900A', 'Engineering Chemistry A'),
+          _SubjectDetail('102902/CO200F', 'Logic System Design'),
+        ],
+      ),
+      'Classwork/ Assessment/Viva Vo...': _InternalMarkData(
+        marks: [
+          _MarkRow('102906/CO922S-B2', '22'),
+        ],
+        subjects: [
+          _SubjectDetail('102906/CO922S-B2', 'Manufacturing Practice'),
+        ],
+      ),
+      'Assignment/Quiz/Course Project': _InternalMarkData(
+        marks: [
+          _MarkRow('102908/CH900A', '14'),
+        ],
+        subjects: [
+          _SubjectDetail('102908/CH900A', 'Engineering Chemistry A'),
+        ],
+      ),
+      'Lab Attendance': _InternalMarkData(
+        marks: [
+          _MarkRow('102908/CH900A', '20'),
+          _MarkRow('102902/CO200F', '10'),
+        ],
+        subjects: [
+          _SubjectDetail('102908/CH900A', 'Engineering Chemistry A'),
+          _SubjectDetail('102902/CO200F', 'Logic System Design'),
+        ],
+      ),
+      'Lab Internal Examination': _InternalMarkData(
+        marks: [
+          _MarkRow('102908/CH900A', '29'),
+          _MarkRow('102902/CO200F', '46'),
+        ],
+        subjects: [
+          _SubjectDetail('102908/CH900A', 'Engineering Chemistry A'),
+          _SubjectDetail('102902/CO200F', 'Logic System Design'),
+        ],
+      ),
+      'Assignment-2/ Assignment Test/...': _InternalMarkData(
+        marks: [
+          _MarkRow('102908/ME900D', '47'),
+        ],
+        subjects: [
+          _SubjectDetail('102908/ME900D', 'Engineering Graphics'),
         ],
       ),
     },

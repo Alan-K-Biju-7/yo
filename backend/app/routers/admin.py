@@ -10,7 +10,7 @@ from app.repositories.notices import NoticesRepository
 from app.repositories.events import EventsRepository
 from app.repositories.admin import AdminRepository
 from app.schemas.models import (
-    AdminLogin, AdminCreate, AttendanceEntry, AttendanceDelete,
+    AdminLogin, AdminCreate, StudentCredentialUpsert, AttendanceEntry, AttendanceDelete,
     MarksEntry, NoticeCreate, EventCreate, WSMessage
 )
 from bson import ObjectId
@@ -83,6 +83,29 @@ async def admin_login(login_data: AdminLogin):
         "token_type": "bearer",
         "admin_name": admin.get("name", "Admin")
     }
+
+
+@router.put("/students/credentials")
+async def upsert_student_credentials(
+    entry: StudentCredentialUpsert,
+    username: str = Depends(verify_admin_token),
+):
+    """Create or update a student's app login credentials."""
+    from app.services.auth_service import get_password_hash
+
+    db = get_db()
+    await db.users.update_one(
+        {"username": entry.username},
+        {
+            "$set": {
+                "username": entry.username,
+                "password_hash": get_password_hash(entry.password),
+                "student_id": entry.student_id,
+            }
+        },
+        upsert=True,
+    )
+    return {"username": entry.username, "message": "Student credentials saved"}
 
 
 # ==================== ATTENDANCE ENDPOINTS ====================
