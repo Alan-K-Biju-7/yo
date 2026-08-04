@@ -248,7 +248,7 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
           _OutlinedDropdown(
             label: 'Select Exam Type',
             value: _examType,
-            options: ReferenceData.examTypes,
+            options: _availableExamTypes,
             onChanged: (value) => setState(() => _examType = value),
           ),
           if (selectedData != null) ...[

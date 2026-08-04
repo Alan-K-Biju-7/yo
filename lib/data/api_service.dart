@@ -2,6 +2,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
+  static const Duration requestTimeout = Duration(seconds: 90);
+
   static const String serverOrigin = String.fromEnvironment(
     'SERVER_ORIGIN',
     defaultValue: 'http://10.0.2.2:8000',
@@ -20,7 +22,7 @@ class ApiService {
       Uri.parse('$serverOrigin/api/auth/token'),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {'username': username, 'password': password},
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(requestTimeout);
 
     if (response.statusCode != 200) {
       throw Exception(response.statusCode == 401
@@ -44,7 +46,7 @@ class ApiService {
             Uri.parse('$baseUrl/attendance/$classCode'),
             headers: _headers(authToken),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(requestTimeout);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -67,7 +69,7 @@ class ApiService {
             Uri.parse('$baseUrl/marks/$classCode'),
             headers: _headers(authToken),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(requestTimeout);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -89,7 +91,7 @@ class ApiService {
             Uri.parse('$baseUrl/notices?is_exam=$isExamNotice'),
             headers: _headers(authToken),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(requestTimeout);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -108,7 +110,7 @@ class ApiService {
             Uri.parse('$baseUrl/events'),
             headers: _headers(authToken),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(requestTimeout);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -130,7 +132,7 @@ class ApiService {
             Uri.parse('$baseUrl/events?date=$date'),
             headers: _headers(authToken),
           )
-          .timeout(const Duration(seconds: 10));
+          .timeout(requestTimeout);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
