@@ -28,8 +28,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? _expandedSection;
-
   Future<void> _logout() async {
     await widget.sessionStore.signOut();
     if (!mounted) return;
@@ -82,7 +80,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.of(context).padding.bottom + 72;
     return Scaffold(
       appBar: ReferenceAppBar(
         title: 'Home',
@@ -101,49 +98,18 @@ class _HomePageState extends State<HomePage> {
               key: const PageStorageKey<String>('home-scroll'),
               slivers: [
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20, 20, 20, 18 + bottomPad),
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
                   sliver: SliverList.list(
                     children: [
-                      const StudentSummaryCard(),
-                      const SizedBox(height: 24),
-                      HomeExpansionCard(
-                        title: 'RSET Vision',
-                        body: ReferenceData.vision,
-                        expanded: _expandedSection == 'vision',
-                        onTap: () => setState(() {
-                          _expandedSection =
-                              _expandedSection == 'vision' ? null : 'vision';
-                        }),
-                      ),
-                      const SizedBox(height: 24),
-                      HomeExpansionCard(
-                        title: 'RSET Mission',
-                        body: ReferenceData.mission,
-                        expanded: _expandedSection == 'mission',
-                        onTap: () => setState(() {
-                          _expandedSection =
-                              _expandedSection == 'mission' ? null : 'mission';
-                        }),
-                      ),
-                      const SizedBox(height: 8),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: _HomeNoticeCard(
-                          heading: 'Latest Notice',
-                          title: 'Merit Award Winners',
-                        ),
-                      ),
-                      const SizedBox(height: 22),
                       const _HomeNoticeCard(
                         heading: 'Latest Exam Notice',
                         title:
-                            'B.Tech. Second Semester Regular (2025 admission) '
-                            'and Supplementary (2023 and 2024 admissions) '
-                            'Examinations, April 2026 – Revaluation results '
-                            'published',
+                            'Sub: B.Tech. Minor Third Semester\n'
+                            '(2025 Admission) Course\n'
+                            'Registration:',
                         fullWidth: true,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final columns = constraints.maxWidth >= 600 ? 5 : 3;
@@ -156,7 +122,7 @@ class _HomePageState extends State<HomePage> {
                               crossAxisCount: columns,
                               mainAxisSpacing: 16,
                               crossAxisSpacing: 16,
-                              childAspectRatio: 1.02,
+                              childAspectRatio: 1,
                             ),
                             itemBuilder: (context, index) {
                               final item = ReferenceData.features[index];
@@ -181,27 +147,39 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        height: 72,
-        backgroundColor: AppColors.surface,
-        indicatorColor: Colors.transparent,
-        selectedIndex: 0,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        onDestinationSelected: (index) {
-          if (index == 1) _open(const ProfilePage());
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home, color: AppColors.accent),
-            selectedIcon: Icon(Icons.home, color: AppColors.accent),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person, color: AppColors.accent),
-            selectedIcon: Icon(Icons.person, color: AppColors.accent),
-            label: 'Profile',
-          ),
-        ],
+      bottomNavigationBar: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            return TextStyle(
+              color: states.contains(WidgetState.selected)
+                  ? AppColors.purple
+                  : const Color(0xFF4D494F),
+              fontSize: 14,
+            );
+          }),
+        ),
+        child: NavigationBar(
+          height: 72,
+          backgroundColor: AppColors.surface,
+          indicatorColor: Colors.transparent,
+          selectedIndex: 0,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          onDestinationSelected: (index) {
+            if (index == 1) _open(const ProfilePage());
+          },
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home, color: AppColors.accent),
+              selectedIcon: Icon(Icons.home, color: AppColors.accent),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person, color: AppColors.accent),
+              selectedIcon: Icon(Icons.person, color: AppColors.accent),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -343,32 +321,43 @@ class _HomeNoticeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 5,
-      shadowColor: Colors.black26,
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        width: fullWidth ? double.infinity : null,
-        padding: const EdgeInsets.all(9),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              heading,
-              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 19,
-                height: 1.35,
-                fontWeight: FontWeight.w700,
+    return SizedBox(
+      height: 128,
+      child: Card(
+        margin: EdgeInsets.zero,
+        elevation: 5,
+        shadowColor: Colors.black26,
+        color: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          width: fullWidth ? double.infinity : null,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                heading,
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.topLeft,
+                  child: Text(
+                    title,
+                    maxLines: 3,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      height: 1.45,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -390,17 +379,17 @@ class _FeatureTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      elevation: 4,
-      borderRadius: BorderRadius.circular(16),
+      elevation: 0,
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(item.icon, size: 36, color: AppColors.primary),
+              Icon(item.icon, size: 28, color: AppColors.primary),
               const SizedBox(height: 10),
               Text(
                 item.label,

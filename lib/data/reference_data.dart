@@ -47,11 +47,11 @@ abstract final class ReferenceData {
   ];
 
   static const upcomingEvents = [
-    AcademicEvent('Techkshetra 2026', '31/7/2026'),
     AcademicEvent(
       'Open House and\nHonours/Minor Internal\nExamination',
       '8/8/2026',
     ),
+    AcademicEvent('Techkshetra 2026', '31/7/2026'),
   ];
 
   static const notices = [

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rset_student_app/core/session/session_store.dart';
 import 'package:rset_student_app/core/theme/app_theme.dart';
-import 'package:rset_student_app/data/reference_data.dart';
 import 'package:rset_student_app/features/attendance/attendance_page.dart';
 import 'package:rset_student_app/features/calendar/academic_calendar_page.dart';
 import 'package:rset_student_app/features/documents/academic_documents_page.dart';
@@ -20,7 +19,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('Home accordions are exclusive and Profile returns to Home', (
+  testWidgets('Home reference content and Profile returns to Home', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({
@@ -34,19 +33,9 @@ void main() {
       HomePage(sessionStore: sessionStore, enableRealtime: false),
     );
 
-    await tester.tap(find.text('RSET Vision'));
-    await tester.pumpAndSettle();
-    expect(find.text(ReferenceData.vision), findsOneWidget);
-
-    await tester.scrollUntilVisible(
-      find.text('RSET Mission'),
-      220,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('RSET Mission'));
-    await tester.pumpAndSettle();
-    expect(find.text(ReferenceData.vision), findsNothing);
-    expect(find.text(ReferenceData.mission), findsOneWidget);
+    expect(find.text('Latest Exam Notice'), findsOneWidget);
+    expect(find.text('Exam Notices'), findsOneWidget);
+    expect(find.text('Upcoming Events'), findsOneWidget);
 
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
