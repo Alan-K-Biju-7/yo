@@ -316,6 +316,12 @@ async function viewMarks() {
 }
 
 function displayMarksTable(marks) {
+    if (!marks || marks.length === 0) {
+        document.getElementById("marksTable").innerHTML =
+            '<p class="empty-state">No marks found for this student and class code.</p>';
+        return;
+    }
+
     let html = '<div class="table-container"><table><thead><tr><th>Subject Code</th><th>Mark</th></tr></thead><tbody>';
     
     marks.forEach(mark => {

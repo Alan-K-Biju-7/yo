@@ -191,7 +191,13 @@ async def get_student_marks(student_id: str, class_code: str, username: str = De
     marks = await repo.get_marks_by_student(student_id, class_code)
     return {
         "student_id": student_id,
-        "marks": marks
+        "marks": [
+            {
+                "subject_code": mark["subject_code"],
+                "mark": mark["mark"],
+            }
+            for mark in marks
+        ],
     }
 
 
