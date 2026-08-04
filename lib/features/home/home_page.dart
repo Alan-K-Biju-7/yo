@@ -14,9 +14,14 @@ import '../notices/notice_list_page.dart';
 import '../profile/profile_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({required this.sessionStore, super.key});
+  const HomePage({
+    required this.sessionStore,
+    this.enableRealtime = true,
+    super.key,
+  });
 
   final SessionStore sessionStore;
+  final bool enableRealtime;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -43,19 +48,26 @@ class _HomePageState extends State<HomePage> {
   void _openFeature(int index) {
     switch (index) {
       case 0:
-        _open(const NoticeListPage());
+        _open(NoticeListPage(
+          sessionStore: widget.sessionStore,
+          enableRealtime: widget.enableRealtime,
+        ));
         return;
       case 1:
-        _open(const NoticeListPage(examNotices: true));
+        _open(NoticeListPage(
+          sessionStore: widget.sessionStore,
+          examNotices: true,
+          enableRealtime: widget.enableRealtime,
+        ));
         return;
       case 2:
-        _open(const InternalMarkPage());
+        _open(InternalMarkPage(sessionStore: widget.sessionStore));
         return;
       case 4:
-        _open(const AttendancePage());
+        _open(AttendancePage(sessionStore: widget.sessionStore));
         return;
       case 5:
-        _open(const AcademicCalendarPage());
+        _open(AcademicCalendarPage(sessionStore: widget.sessionStore));
         return;
       case 6:
         _open(const LateArrivalsPage());
@@ -144,7 +156,7 @@ class _HomePageState extends State<HomePage> {
                               crossAxisCount: columns,
                               mainAxisSpacing: 16,
                               crossAxisSpacing: 16,
-                                  childAspectRatio: 1.02,
+                              childAspectRatio: 1.02,
                             ),
                             itemBuilder: (context, index) {
                               final item = ReferenceData.features[index];

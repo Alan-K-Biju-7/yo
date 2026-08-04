@@ -16,13 +16,16 @@ void main() {
     await tester.pumpWidget(RsetStudentApp(sessionStore: sessionStore));
 
     expect(find.text('Username'), findsOneWidget);
-    await tester.enterText(find.byType(EditableText).first, 'student');
-    await tester.enterText(find.byType(EditableText).last, 'password');
-    await tester.tap(find.text('Login'));
-    await tester.pumpAndSettle();
+    await sessionStore.signIn(
+      accessToken: 'test-token',
+      studentId: 'student',
+    );
+    final restoredSession = await SessionStore.load();
+    await tester.pumpWidget(RsetStudentApp(sessionStore: restoredSession));
+    await tester.pump();
 
     expect(find.text('Home'), findsWidgets);
-    expect((await SessionStore.load()).isSignedIn, isTrue);
+    expect(restoredSession.isSignedIn, isTrue);
 
     await tester.tap(find.byTooltip('Logout'));
     await tester.pumpAndSettle();

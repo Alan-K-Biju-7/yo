@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../core/session/session_store.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/screen_shell.dart';
+import '../../data/api_service.dart';
+import '../../data/websocket_service.dart';
 
 class AttendancePage extends StatefulWidget {
-  const AttendancePage({super.key});
+  const AttendancePage({required this.sessionStore, super.key});
+
+  final SessionStore sessionStore;
 
   @override
   State<AttendancePage> createState() => _AttendancePageState();
@@ -20,127 +25,79 @@ class AttendanceRow {
 class _AttendancePageState extends State<AttendancePage> {
   static const _classCodes = ['2026S3CS-C', '2026S2CS-C', '2025S1CS-C'];
 
-  static const _attendanceByClass = {
-    '2026S3CS-C': [
-      AttendanceRow('07/01/2026', [
-        '102802/C0300A',
-        '102903/C0300B',
-        '102902/C0300D',
-        '102903/C0322S',
-        '102903/C0322S',
-        '102903/C0322S',
-        '',
-      ]),
-    ],
-    '2026S2CS-C': [
-      AttendanceRow('12/10/2025', [
-        '102903/MA200B',
-        '102903/CE200C',
-        '102908/CH900A',
-        '102908/ME900D',
-        '102908/CH900A',
-        '102908/CO200F',
-        '',
-      ]),
-      AttendanceRow('01/21/2026', [
-        '',
-        '',
-        '102908/CH900A',
-        '102908/ME900D',
-        '102903/MA200B',
-        '',
-        '',
-      ]),
-      AttendanceRow('01/22/2026', [
-        '102902/CO200F',
-        '102902/CO200F',
-        '',
-        '102903/MA200B',
-        '',
-        '',
-        '',
-      ]),
-      AttendanceRow('01/23/2026', [
-        '102906/CO922S-B2',
-        '102906/CO922S-B2',
-        '102908/CH900A',
-        '402909/CO901R',
-        '102903/CE200C',
-        '102903/MA200B',
-        '102908/CH900A',
-      ]),
-      AttendanceRow('02/09/2026', [
-        '102908/ME900D',
-        '102908/ME900D',
-        '102902/CO200F',
-        '102903/MA200B',
-        '102902/CO200F',
-        '102908/CH900A',
-        '',
-      ]),
-      AttendanceRow('03/19/2026', [
-        '102902/CO200F',
-        '102902/CO200F',
-        '',
-        '',
-        '',
-        '',
-        '',
-      ]),
-    ],
-    '2025S1CS-C': [
-      AttendanceRow('10/10/2025', [
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-      ]),
-      AttendanceRow('10/24/2025', [
-        '',
-        '',
-        '102906/PH900A',
-        '',
-        '102906/CO100E',
-        '',
-        '',
-      ]),
-      AttendanceRow('10/30/2025', [
-        '102908/MA100B',
-        '102908/MA100B',
-        '102906/CO100E',
-        '102906/PH900A',
-        '102906/PH900A',
-        '102903/CO100F',
-        '102903/CO100F',
-      ]),
-      AttendanceRow('10/31/2025', [
-        '102903/CO100F',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-      ]),
-      AttendanceRow('11/14/2025', [
-        '102903/CO100F',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-      ]),
-    ],
-  };
-
   String _classCode = _classCodes.first;
+  List<AttendanceRow> _currentRows = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
-  List<AttendanceRow> get _currentRows =>
-      _attendanceByClass[_classCode] ?? const <AttendanceRow>[];
+  late WebSocketService _wsService;
+
+  @override
+  void initState() {
+    super.initState();
+    _wsService = WebSocketService();
+    _setupWebSocket();
+    _loadAttendance();
+  }
+
+  void _setupWebSocket() {
+    _wsService.onMessageReceived = (message) {
+      if (message['type'] == 'attendance_updated') {
+        // Reload attendance data when update is received
+        _loadAttendance();
+      }
+    };
+
+    _wsService.connect(widget.sessionStore.accessToken!);
+    _wsService.subscribe('attendance');
+  }
+
+  Future<void> _loadAttendance() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final attendanceData = await ApiService.getAttendanceByClass(
+        _classCode,
+        widget.sessionStore.accessToken!,
+      );
+
+      final rows = <AttendanceRow>[];
+
+      // Convert API response to AttendanceRow format
+      attendanceData.forEach((date, records) {
+        final periods = <String>['', '', '', '', '', '', ''];
+
+        for (final record in records) {
+          final periodIndex = (record['period'] as int) - 1;
+          periods[periodIndex] = record['subject_code'];
+        }
+
+        rows.add(AttendanceRow(date, periods));
+      });
+
+      // Sort by date
+      rows.sort((a, b) => a.date.compareTo(b.date));
+
+      setState(() {
+        _currentRows = rows;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load attendance: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _wsService.disconnect();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +109,7 @@ class _AttendancePageState extends State<AttendancePage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: DropdownButtonFormField<String>(
-              value: _classCode,
+              initialValue: _classCode,
               icon: const Icon(Icons.arrow_drop_down, size: 30),
               style: const TextStyle(color: AppColors.ink, fontSize: 20),
               decoration: InputDecoration(
@@ -185,50 +142,94 @@ class _AttendancePageState extends State<AttendancePage> {
                   DropdownMenuItem(value: code, child: Text(code)),
               ],
               onChanged: (value) {
-                if (value != null) setState(() => _classCode = value);
+                if (value != null) {
+                  setState(() => _classCode = value);
+                  _loadAttendance();
+                }
               },
             ),
           ),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(top: 4),
-              child: SizedBox(
-                width: 870,
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const _TableHeader(width: 100, label: 'Date'),
-                        for (var i = 1; i <= 7; i++)
-                          _TableHeader(width: 110, label: 'Period $i'),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    for (final row in _currentRows) ...[
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 100,
-                            height: 41,
-                            child: Center(
-                              child: Text(
-                                row.date,
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                            ),
-                          ),
-                          for (final value in row.periods)
-                            _AttendanceCell(value: value),
-                        ],
+          if (_isLoading)
+            const Expanded(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_errorMessage != null)
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error, size: 48, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(_errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadAttendance,
+                        child: const Text('Retry'),
                       ),
-                      const SizedBox(height: 8),
                     ],
+                  ),
+                ),
+              ),
+            )
+          else if (_currentRows.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.info, size: 48, color: Colors.blue),
+                    const SizedBox(height: 16),
+                    const Text('No absence records found'),
                   ],
                 ),
               ),
+            )
+          else
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(top: 4),
+                child: SizedBox(
+                  width: 870,
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const _TableHeader(width: 100, label: 'Date'),
+                          for (var i = 1; i <= 7; i++)
+                            _TableHeader(width: 110, label: 'Period $i'),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      for (final row in _currentRows) ...[
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 100,
+                              height: 41,
+                              child: Center(
+                                child: Text(
+                                  row.date,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ),
+                            for (final value in row.periods)
+                              _AttendanceCell(value: value),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -282,6 +283,8 @@ class _AttendanceCell extends StatelessWidget {
           color: empty ? AppColors.ink : Colors.white,
           fontSize: 13,
         ),
+        textAlign: TextAlign.center,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

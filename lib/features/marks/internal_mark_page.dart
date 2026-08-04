@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/session/session_store.dart';
 import '../../core/widgets/screen_shell.dart';
+import '../../data/api_service.dart';
 import '../../data/reference_data.dart';
+import '../../data/websocket_service.dart';
 
 class InternalMarkPage extends StatefulWidget {
-  const InternalMarkPage({super.key});
+  const InternalMarkPage({required this.sessionStore, super.key});
+
+  final SessionStore sessionStore;
 
   @override
   State<InternalMarkPage> createState() => _InternalMarkPageState();
@@ -15,20 +20,21 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
   static const _classCodes = ['2026S3CS-C', '2026S2CS-C', '2025S1CS-C'];
 
   static List<String> get _filteredExamTypes {
+    // Include all exam types except explicit exclusions. The design requires
+    // that only 'Attendance' and 'Project/report from module 6' be excluded.
     return ReferenceData.examTypes.where((type) {
       final lower = type.toLowerCase();
-      if (lower.contains('re-test') || lower.contains('attendance')) {
-        return false;
-      }
-      if (lower.contains('module 6') || lower.contains('course project')) {
-        return false;
-      }
+      if (lower == 'attendance') return false;
+      if (lower == 'project/report from module 6') return false;
       return true;
     }).toList();
   }
 
   List<String> get _availableExamTypes {
-    return _dataByClassAndExam[_classCode]?.keys.toList() ?? _filteredExamTypes;
+    final values = _dataByClassAndExam[_classCode]?.keys.toList() ??
+        List<String>.from(_filteredExamTypes);
+    if (_liveData != null) values.insert(0, 'Latest published marks');
+    return values;
   }
 
   static const _dataByClassAndExam = {
@@ -93,7 +99,8 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
         subjects: [
           _SubjectDetail('102906/PH900A', 'Engineering Physics A'),
           _SubjectDetail('102908/MA100B', 'Calculus and Linear Algebra'),
-          _SubjectDetail('102903/CO100F', 'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102903/CO100F',
+              'Introduction to Electrical and Electronics Engineering'),
           _SubjectDetail('102908/EN900G', 'English for Engineers'),
         ],
       ),
@@ -107,7 +114,8 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
         subjects: [
           _SubjectDetail('102906/PH900A', 'Engineering Physics A'),
           _SubjectDetail('102908/MA100B', 'Calculus and Linear Algebra'),
-          _SubjectDetail('102903/CO100F', 'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102903/CO100F',
+              'Introduction to Electrical and Electronics Engineering'),
           _SubjectDetail('102908/EN900G', 'English for Engineers'),
         ],
       ),
@@ -119,7 +127,8 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
         ],
         subjects: [
           _SubjectDetail('102908/MA100B', 'Calculus and Linear Algebra'),
-          _SubjectDetail('102906/CO100E', 'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102906/CO100E',
+              'Introduction to Electrical and Electronics Engineering'),
           _SubjectDetail('102908/EN900G', 'English for Engineers'),
         ],
       ),
@@ -128,7 +137,8 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
           _MarkRow('102906/CO100E', '6.5'),
         ],
         subjects: [
-          _SubjectDetail('102906/CO100E', 'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102906/CO100E',
+              'Introduction to Electrical and Electronics Engineering'),
         ],
       ),
     },
@@ -136,9 +146,73 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
 
   String _classCode = _classCodes.first;
   String? _examType;
+  _InternalMarkData? _liveData;
+  bool _loading = true;
+  String? _loadError;
+  late final WebSocketService _wsService;
+
+  @override
+  void initState() {
+    super.initState();
+    _wsService = WebSocketService();
+    _wsService.onMessageReceived = (message) {
+      if (message['type'] == 'marks_updated') _loadMarks();
+    };
+    _wsService.connect(widget.sessionStore.accessToken!);
+    _wsService.subscribe('marks');
+    _loadMarks();
+  }
+
+  Future<void> _loadMarks() async {
+    if (mounted) setState(() => _loading = true);
+    try {
+      final response = await ApiService.getMarks(
+        widget.sessionStore.studentId!,
+        _classCode,
+        widget.sessionStore.accessToken!,
+      );
+      final items = (response['marks'] as List<dynamic>? ?? const []);
+      final marks = items
+          .map((item) => _MarkRow(
+                item['subject_code'].toString(),
+                item['mark'].toString(),
+              ))
+          .toList();
+      if (!mounted) return;
+      setState(() {
+        _liveData = marks.isEmpty
+            ? null
+            : _InternalMarkData(
+                marks: marks,
+                subjects: marks
+                    .map((mark) => _SubjectDetail(
+                          mark.subjectCode,
+                          mark.subjectCode,
+                        ))
+                    .toList(),
+              );
+        if (_liveData != null) _examType = 'Latest published marks';
+        _loadError = null;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = error.toString().replaceFirst('Exception: ', '');
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _wsService.disconnect();
+    super.dispose();
+  }
 
   _InternalMarkData? get _selectedData {
     if (_examType == null) return null;
+    if (_examType == 'Latest published marks') return _liveData;
     return _dataByClassAndExam[_classCode]?[_examType!];
   }
 
@@ -160,8 +234,16 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
                 _classCode = value;
                 _examType = null;
               });
+              _loadMarks();
             },
           ),
+          if (_loading) const LinearProgressIndicator(),
+          if (_loadError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child:
+                  Text(_loadError!, style: const TextStyle(color: Colors.red)),
+            ),
           const SizedBox(height: 17),
           _OutlinedDropdown(
             label: 'Select Exam Type',
@@ -231,47 +313,59 @@ class _MarksTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        child: Column(
-          children: [
-            Row(
-              children: const [
-                Expanded(
-                  child: Text(
-                    'Subject Code',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                  ),
-                ),
-                SizedBox(width: 80),
-                Text(
-                  'Mark 1',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                ),
-              ],
-            ),
-            const Divider(height: 22, thickness: 1.2),
-            for (final mark in data.marks) ...[
+    return LayoutBuilder(builder: (context, constraints) {
+      final double markColumnWidth =
+          (constraints.maxWidth * 0.28).clamp(60.0, 140.0);
+
+      return Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          child: Column(
+            children: [
               Row(
                 children: [
-                  Expanded(
+                  const Expanded(
                     child: Text(
-                      mark.subjectCode,
-                      style: const TextStyle(fontSize: 16),
+                      'Subject Code',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                     ),
                   ),
-                  SizedBox(width: 80, child: Text(mark.mark, textAlign: TextAlign.right, style: const TextStyle(fontSize: 16))),
+                  SizedBox(
+                      width: markColumnWidth,
+                      child: const Text('Mark 1',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 16))),
                 ],
               ),
-              const Divider(height: 18, thickness: 1, color: Color(0xFFE1E1E1)),
+              const Divider(height: 22, thickness: 1.2),
+              for (final mark in data.marks) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        mark.subjectCode,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                    SizedBox(
+                        width: markColumnWidth,
+                        child: Text(mark.mark,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(fontSize: 16))),
+                  ],
+                ),
+                const Divider(
+                    height: 18, thickness: 1, color: Color(0xFFE1E1E1)),
+              ],
             ],
-          ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
 
@@ -282,57 +376,64 @@ class _SubjectDetailsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        child: Column(
-          children: [
-            Row(
-              children: const [
-                Expanded(
-                  child: Text(
-                    'Subject Code',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                  ),
-                ),
-                SizedBox(width: 20),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Subject Name',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 22, thickness: 1.2),
-            for (final subject in data.subjects) ...[
+    return LayoutBuilder(builder: (context, constraints) {
+      final double gap = (constraints.maxWidth * 0.03).clamp(12.0, 32.0);
+
+      return Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          child: Column(
+            children: [
               Row(
                 children: [
-                  Expanded(
+                  const Expanded(
                     child: Text(
-                      subject.subjectCode,
-                      style: const TextStyle(fontSize: 16),
+                      'Subject Code',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                     ),
                   ),
-                  const SizedBox(width: 20),
+                  SizedBox(width: gap),
                   Expanded(
                     flex: 2,
                     child: Text(
-                      subject.subjectName,
-                      style: const TextStyle(fontSize: 16),
+                      'Subject Name',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 16),
                     ),
                   ),
                 ],
               ),
-              const Divider(height: 18, thickness: 1, color: Color(0xFFE1E1E1)),
+              const Divider(height: 22, thickness: 1.2),
+              for (final subject in data.subjects) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        subject.subjectCode,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                    SizedBox(width: gap),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        subject.subjectName,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(
+                    height: 18, thickness: 1, color: Color(0xFFE1E1E1)),
+              ],
             ],
-          ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
 
@@ -397,12 +498,11 @@ class _OutlinedDropdown extends StatelessWidget {
               width: double.infinity,
               child: Text(
                 option,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
+                softWrap: true,
               ),
             ),
           ),

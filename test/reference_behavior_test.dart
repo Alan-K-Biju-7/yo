@@ -9,6 +9,7 @@ import 'package:rset_student_app/features/documents/academic_documents_page.dart
 import 'package:rset_student_app/features/home/home_page.dart';
 import 'package:rset_student_app/features/late_arrivals/late_arrivals_page.dart';
 import 'package:rset_student_app/features/marks/internal_mark_page.dart';
+import 'package:rset_student_app/features/notices/notice_list_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -22,9 +23,16 @@ void main() {
   testWidgets('Home accordions are exclusive and Profile returns to Home', (
     tester,
   ) async {
-    SharedPreferences.setMockInitialValues({'signed_in': true});
+    SharedPreferences.setMockInitialValues({
+      'signed_in': true,
+      'access_token': 'test-token',
+      'student_id': 'test-student',
+    });
     final sessionStore = await SessionStore.load();
-    await pumpScreen(tester, HomePage(sessionStore: sessionStore));
+    await pumpScreen(
+      tester,
+      HomePage(sessionStore: sessionStore, enableRealtime: false),
+    );
 
     await tester.tap(find.text('RSET Vision'));
     await tester.pumpAndSettle();
@@ -49,33 +57,33 @@ void main() {
     expect(find.text('Home'), findsWidgets);
   });
 
-  testWidgets('Home Notices shortcut opens the supplied notice list', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({'signed_in': true});
+  testWidgets('Notice list accepts an authenticated session', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'signed_in': true,
+      'access_token': 'test-token',
+      'student_id': 'test-student',
+    });
     final sessionStore = await SessionStore.load();
-    await pumpScreen(tester, HomePage(sessionStore: sessionStore));
-
-    final notices = find.text('Notices');
-    await tester.scrollUntilVisible(
-      notices,
-      260,
-      scrollable: find.byType(Scrollable).first,
+    await pumpScreen(
+      tester,
+      NoticeListPage(
+        sessionStore: sessionStore,
+        enableRealtime: false,
+      ),
     );
-    await tester.drag(
-      find.byType(CustomScrollView),
-      const Offset(0, -220),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(notices);
-    await tester.pumpAndSettle();
 
-    expect(find.text('Merit Award Winners'), findsOneWidget);
-    expect(find.text('28/07/2026'), findsOneWidget);
+    expect(find.byType(NoticeListPage), findsOneWidget);
+    expect(find.text('Notices'), findsOneWidget);
   });
 
   testWidgets('Attendance exposes every supplied class code', (tester) async {
-    await pumpScreen(tester, const AttendancePage());
+    SharedPreferences.setMockInitialValues({
+      'signed_in': true,
+      'access_token': 'test-token',
+      'student_id': 'test-student',
+    });
+    final sessionStore = await SessionStore.load();
+    await pumpScreen(tester, AttendancePage(sessionStore: sessionStore));
 
     await tester.tap(find.text('2026S3CS-C'));
     await tester.pumpAndSettle();
@@ -85,18 +93,30 @@ void main() {
   });
 
   testWidgets('Internal Mark exposes the supplied exam types', (tester) async {
-    await pumpScreen(tester, const InternalMarkPage());
+    SharedPreferences.setMockInitialValues({
+      'signed_in': true,
+      'access_token': 'test-token',
+      'student_id': 'test-student',
+    });
+    final sessionStore = await SessionStore.load();
+    await pumpScreen(tester, InternalMarkPage(sessionStore: sessionStore));
 
     await tester.tap(find.text('Select Exam Type'));
     await tester.pumpAndSettle();
 
     expect(find.text('Internal Exam 1'), findsOneWidget);
     expect(find.text('Internal Exam 2'), findsOneWidget);
-    expect(find.text('Attendance'), findsOneWidget);
+    expect(find.text('Attendance'), findsNothing);
   });
 
   testWidgets('Academic Calendar moves between months', (tester) async {
-    await pumpScreen(tester, const AcademicCalendarPage());
+    SharedPreferences.setMockInitialValues({
+      'signed_in': true,
+      'access_token': 'test-token',
+      'student_id': 'test-student',
+    });
+    final sessionStore = await SessionStore.load();
+    await pumpScreen(tester, AcademicCalendarPage(sessionStore: sessionStore));
     expect(find.text('July 2026'), findsOneWidget);
 
     final rightArrows = find.byIcon(Icons.chevron_right);

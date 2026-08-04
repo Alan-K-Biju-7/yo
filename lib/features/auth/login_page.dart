@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/session/session_store.dart';
 import '../../core/theme/app_theme.dart';
+import '../../data/api_service.dart';
 import '../home/home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -37,14 +38,28 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _submitting = true);
-    await widget.sessionStore.signIn();
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => HomePage(sessionStore: widget.sessionStore),
-      ),
-      (_) => false,
-    );
+    try {
+      final username = _usernameController.text.trim();
+      final result = await ApiService.login(username, _passwordController.text);
+      await widget.sessionStore.signIn(
+        accessToken: result['access_token'] as String,
+        studentId: username,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(
+          builder: (_) => HomePage(sessionStore: widget.sessionStore),
+        ),
+        (_) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(error.toString().replaceFirst('Exception: ', ''))),
+      );
+      setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -242,29 +257,6 @@ class _OfficialLogoCrop extends StatelessWidget {
   final double imageWidth;
   final double imageHeight;
   final Alignment alignment;
-
-  static const _whiteTransparentFilter = ColorFilter.matrix([
-    -2.2,
-    0,
-    0,
-    0,
-    585,
-    0,
-    -0.795,
-    0,
-    0,
-    287,
-    0,
-    0,
-    -0.419,
-    0,
-    272,
-    0,
-    0,
-    0,
-    1,
-    0,
-  ]);
 
   @override
   Widget build(BuildContext context) {

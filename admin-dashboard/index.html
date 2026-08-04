@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - RSET College</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+            <div class="login-card">
+                <h1>Admin Portal</h1>
+                <p class="subtitle">RSET College Management System</p>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    
+                    <div id="loginError" class="error-message" style="display: none;"></div>
+                    
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+                
+                <div class="init-admin" id="initAdminDiv" style="display: none;">
+                    <p>No admin account found. Create one below:</p>
+                    <form id="initAdminForm">
+                        <div class="form-group">
+                            <label for="initName">Admin Name</label>
+                            <input type="text" id="initName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="initUsername">Username</label>
+                            <input type="text" id="initUsername" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="initPassword">Password</label>
+                            <input type="password" id="initPassword" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Create Admin Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="screen">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <h1>Admin Dashboard</h1>
+                <p id="adminName" class="admin-name"></p>
+            </div>
+            <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+        </nav>
+
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <nav class="nav-menu">
+                    <button class="nav-item active" data-tab="attendance">
+                        <span class="icon">📅</span> Attendance
+                    </button>
+                    <button class="nav-item" data-tab="marks">
+                        <span class="icon">📊</span> Marks
+                    </button>
+                    <button class="nav-item" data-tab="notices">
+                        <span class="icon">📄</span> Notices
+                    </button>
+                    <button class="nav-item" data-tab="events">
+                        <span class="icon">📌</span> Events
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Attendance Tab -->
+                <section id="attendanceTab" class="tab-content active">
+                    <h2>Manage Attendance</h2>
+                    
+                    <div class="form-section">
+                        <h3>Add Absence Record</h3>
+                        <form id="attendanceForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="attendanceDate">Date</label>
+                                    <input type="date" id="attendanceDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="classCode">Class Code</label>
+                                    <input type="text" id="classCode" placeholder="e.g., 2026S3CS-C" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="period">Period (1-7)</label>
+                                    <select id="period" required>
+                                        <option value="">Select Period</option>
+                                        <option value="1">Period 1</option>
+                                        <option value="2">Period 2</option>
+                                        <option value="3">Period 3</option>
+                                        <option value="4">Period 4</option>
+                                        <option value="5">Period 5</option>
+                                        <option value="6">Period 6</option>
+                                        <option value="7">Period 7</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="subjectCode">Subject Code</label>
+                                    <input type="text" id="subjectCode" placeholder="e.g., CS101" required>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Add Absence</button>
+                        </form>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Remove Absence Record</h3>
+                        <form id="removeAttendanceForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="removeDate">Date</label>
+                                    <input type="date" id="removeDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="removeClassCode">Class Code</label>
+                                    <input type="text" id="removeClassCode" placeholder="e.g., 2026S3CS-C" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="removePeriod">Period (1-7)</label>
+                                    <select id="removePeriod" required>
+                                        <option value="">Select Period</option>
+                                        <option value="1">Period 1</option>
+                                        <option value="2">Period 2</option>
+                                        <option value="3">Period 3</option>
+                                        <option value="4">Period 4</option>
+                                        <option value="5">Period 5</option>
+                                        <option value="6">Period 6</option>
+                                        <option value="7">Period 7</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-danger">Remove Absence</button>
+                        </form>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>View Absences</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="viewClassCode">Class Code</label>
+                                <input type="text" id="viewClassCode" placeholder="e.g., 2026S3CS-C">
+                            </div>
+                            <button type="button" class="btn btn-info" onclick="viewAbsences()">View</button>
+                        </div>
+                        <div id="absencesTable"></div>
+                    </div>
+                </section>
+
+                <!-- Marks Tab -->
+                <section id="marksTab" class="tab-content">
+                    <h2>Manage Marks</h2>
+                    
+                    <div class="form-section">
+                        <h3>Add/Update Mark</h3>
+                        <form id="marksForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="marksClassCode">Class Code</label>
+                                    <input type="text" id="marksClassCode" placeholder="e.g., 2026S3CS-C" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="marksSubjectCode">Subject Code</label>
+                                    <input type="text" id="marksSubjectCode" placeholder="e.g., CS101" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="studentId">Student ID</label>
+                                    <input type="text" id="studentId" placeholder="e.g., 12345" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="markValue">Mark</label>
+                                    <input type="text" id="markValue" placeholder="e.g., A+ or 95" required>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Save Mark</button>
+                        </form>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>View Student Marks</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="viewStudentId">Student ID</label>
+                                <input type="text" id="viewStudentId" placeholder="e.g., 12345">
+                            </div>
+                            <div class="form-group">
+                                <label for="viewMarksClassCode">Class Code</label>
+                                <input type="text" id="viewMarksClassCode" placeholder="e.g., 2026S3CS-C">
+                            </div>
+                            <button type="button" class="btn btn-info" onclick="viewMarks()">View</button>
+                        </div>
+                        <div id="marksTable"></div>
+                    </div>
+                </section>
+
+                <!-- Notices Tab -->
+                <section id="noticesTab" class="tab-content">
+                    <h2>Manage Notices</h2>
+                    
+                    <div class="form-section">
+                        <h3>Upload Notice</h3>
+                        <form id="noticesForm" enctype="multipart/form-data">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="noticeTitle">Notice Title</label>
+                                    <input type="text" id="noticeTitle" placeholder="e.g., Semester Exam Schedule" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="noticeType">Notice Type</label>
+                                    <select id="noticeType" required>
+                                        <option value="false">Regular Notice</option>
+                                        <option value="true">Exam Notice</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="pdfFile">PDF File (Max 10MB)</label>
+                                    <input type="file" id="pdfFile" accept=".pdf" required>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Upload Notice</button>
+                        </form>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>All Notices</h3>
+                        <div class="form-row">
+                            <button type="button" class="btn btn-info" onclick="loadNotices('all')">All Notices</button>
+                            <button type="button" class="btn btn-info" onclick="loadNotices('exam')">Exam Notices</button>
+                        </div>
+                        <div id="noticesTable"></div>
+                    </div>
+                </section>
+
+                <!-- Events Tab -->
+                <section id="eventsTab" class="tab-content">
+                    <h2>Manage Events</h2>
+                    
+                    <div class="form-section">
+                        <h3>Create Event</h3>
+                        <form id="eventsForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="eventTitle">Event Title</label>
+                                    <input type="text" id="eventTitle" placeholder="e.g., Annual Fest" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="eventDate">Date</label>
+                                    <input type="date" id="eventDate" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label for="eventDescription">Description (Optional)</label>
+                                    <textarea id="eventDescription" placeholder="Event details..." rows="4"></textarea>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Create Event</button>
+                        </form>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>All Events</h3>
+                        <button type="button" class="btn btn-info" onclick="loadEvents()">Load Events</button>
+                        <div id="eventsTable"></div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -22,18 +22,22 @@ void main() {
     ) async {
       await tester.binding.setSurfaceSize(size);
       addTearDown(() => tester.binding.setSurfaceSize(null));
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({
+        'signed_in': true,
+        'access_token': 'test-token',
+        'student_id': 'test-student',
+      });
       final sessionStore = await SessionStore.load();
 
       final screens = <Widget>[
         LoginPage(sessionStore: sessionStore),
         HomePage(sessionStore: sessionStore),
         const ProfilePage(),
-        const AttendancePage(),
-        const NoticeListPage(),
-        const NoticeListPage(examNotices: true),
-        const InternalMarkPage(),
-        const AcademicCalendarPage(),
+        AttendancePage(sessionStore: sessionStore),
+        NoticeListPage(sessionStore: sessionStore),
+        NoticeListPage(sessionStore: sessionStore, examNotices: true),
+        InternalMarkPage(sessionStore: sessionStore),
+        AcademicCalendarPage(sessionStore: sessionStore),
         const LateArrivalsPage(),
         const AcademicDocumentsPage(),
       ];
