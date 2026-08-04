@@ -163,6 +163,8 @@ abstract final class ReferenceData {
     'Re-Test 1',
     'Re-Test 2',
     'Attendance',
+    'Practical Evaluation',
+    'Lab Internal Examination',
     'Re-Test1 Marks for Ineligible Stu...',
     'Re-Test2 Marks for Ineligible Stu...',
     'Assignment/Quiz/Course Project',

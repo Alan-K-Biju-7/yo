@@ -99,7 +99,9 @@ void main() {
     expect(find.text('Assignment-1/Assignment Test/...'), findsOneWidget);
     expect(find.text('Re-Test 1'), findsOneWidget);
     expect(find.text('Re-Test 2'), findsOneWidget);
-    expect(find.text('Attendance'), findsNothing);
+    expect(find.text('Attendance'), findsOneWidget);
+    expect(find.text('Practical Evaluation'), findsOneWidget);
+    expect(find.text('Lab Internal Examination'), findsOneWidget);
   });
 
   testWidgets('Academic Calendar moves between months', (tester) async {

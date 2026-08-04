@@ -23,16 +23,16 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
   static const _subjectNames = {
     '102906/PH900A': 'Engineering Physics A',
     '102908/MA100B': 'Calculus and Linear Algebra',
-    '102903/CO100F': 'Introduction to Electrical and Electronics Engineering',
+    '102906/CO100E': 'Introduction to Electrical and Electronics Engineering',
+    '102903/CO100F': 'Introduction to C Programming',
     '102908/EN900G': 'English for Engineers',
   };
 
   static List<String> get _filteredExamTypes {
-    // Include all exam types except explicit exclusions. The design requires
-    // that only 'Attendance' and 'Project/report from module 6' be excluded.
+    // Include all exam types except the module-six project entry, which is not
+    // part of the supplied Internal Mark dropdown.
     return ReferenceData.examTypes.where((type) {
       final lower = type.toLowerCase();
-      if (lower == 'attendance') return false;
       if (lower == 'project/report from module 6') return false;
       return true;
     }).toList();
@@ -108,8 +108,7 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
         subjects: [
           _SubjectDetail('102906/PH900A', 'Engineering Physics A'),
           _SubjectDetail('102908/MA100B', 'Calculus and Linear Algebra'),
-          _SubjectDetail('102903/CO100F',
-              'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102903/CO100F', 'Introduction to C Programming'),
           _SubjectDetail('102908/EN900G', 'English for Engineers'),
         ],
       ),
@@ -123,8 +122,7 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
         subjects: [
           _SubjectDetail('102906/PH900A', 'Engineering Physics A'),
           _SubjectDetail('102908/MA100B', 'Calculus and Linear Algebra'),
-          _SubjectDetail('102903/CO100F',
-              'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102903/CO100F', 'Introduction to C Programming'),
           _SubjectDetail('102908/EN900G', 'English for Engineers'),
         ],
       ),
@@ -148,6 +146,39 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
         subjects: [
           _SubjectDetail('102906/CO100E',
               'Introduction to Electrical and Electronics Engineering'),
+        ],
+      ),
+      'Attendance': _InternalMarkData(
+        marks: [
+          _MarkRow('102906/PH900A', '9.4'),
+          _MarkRow('102908/MA100B', '9.5'),
+          _MarkRow('102906/CO100E', '9'),
+          _MarkRow('102903/CO100F', '8.8'),
+          _MarkRow('102908/EN900G', '10'),
+        ],
+        subjects: [
+          _SubjectDetail('102906/PH900A', 'Engineering Physics A'),
+          _SubjectDetail('102908/MA100B', 'Calculus and Linear Algebra'),
+          _SubjectDetail('102906/CO100E',
+              'Introduction to Electrical and Electronics Engineering'),
+          _SubjectDetail('102903/CO100F', 'Introduction to C Programming'),
+          _SubjectDetail('102908/EN900G', 'English for Engineers'),
+        ],
+      ),
+      'Practical Evaluation': _InternalMarkData(
+        marks: [
+          _MarkRow('102903/CO100F', '18'),
+        ],
+        subjects: [
+          _SubjectDetail('102903/CO100F', 'Introduction to C Programming'),
+        ],
+      ),
+      'Lab Internal Examination': _InternalMarkData(
+        marks: [
+          _MarkRow('102906/PH900A', '39'),
+        ],
+        subjects: [
+          _SubjectDetail('102906/PH900A', 'Engineering Physics A'),
         ],
       ),
     },
