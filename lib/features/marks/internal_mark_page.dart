@@ -56,42 +56,49 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
     '2026S2CS-C': {
       'Internal Exam 1': _InternalMarkData(
         marks: [
-          _MarkRow('102923/CS200A', '22'),
-          _MarkRow('102921/MA200B', '24.5'),
-          _MarkRow('102922/PH200D', '26'),
-          _MarkRow('102924/EE200C', '30.5'),
+          _MarkRow('102908/CH900A', '49'),
+          _MarkRow('102903/MA200B', '22'),
+          _MarkRow('102903/CE200C', '27'),
+          _MarkRow('102908/ME900D', '34'),
+          _MarkRow('102902/CO200F', '32.5'),
         ],
         subjects: [
-          _SubjectDetail('102923/CS200A', 'Data Structures and Algorithms'),
-          _SubjectDetail('102921/MA200B', 'Discrete Mathematics'),
-          _SubjectDetail('102922/PH200D', 'Physics for Computer Science'),
-          _SubjectDetail('102924/EE200C', 'Circuit Theory'),
+          _SubjectDetail('102908/CH900A', 'Engineering Chemistry A'),
+          _SubjectDetail(
+              '102903/MA200B', 'Complex Analysis and Linear Algebra'),
+          _SubjectDetail('102903/CE200C', 'Engineering Mechanics'),
+          _SubjectDetail('102908/ME900D', 'Engineering Graphics'),
+          _SubjectDetail('102902/CO200F', 'Logic System Design'),
         ],
       ),
       'Internal Exam 2': _InternalMarkData(
         marks: [
-          _MarkRow('102923/CS200A', '28'),
-          _MarkRow('102921/MA200B', '23.5'),
-          _MarkRow('102922/PH200D', '29'),
-          _MarkRow('102924/EE200C', '31.5'),
+          _MarkRow('102908/CH900A', '40'),
+          _MarkRow('102903/MA200B', '28'),
+          _MarkRow('102903/CE200C', '46'),
+          _MarkRow('102908/ME900D', '38'),
+          _MarkRow('102902/CO200F', '35'),
         ],
         subjects: [
-          _SubjectDetail('102923/CS200A', 'Data Structures and Algorithms'),
-          _SubjectDetail('102921/MA200B', 'Discrete Mathematics'),
-          _SubjectDetail('102922/PH200D', 'Physics for Computer Science'),
-          _SubjectDetail('102924/EE200C', 'Circuit Theory'),
+          _SubjectDetail('102908/CH900A', 'Engineering Chemistry A'),
+          _SubjectDetail(
+              '102903/MA200B', 'Complex Analysis and Linear Algebra'),
+          _SubjectDetail('102903/CE200C', 'Engineering Mechanics'),
+          _SubjectDetail('102908/ME900D', 'Engineering Graphics'),
+          _SubjectDetail('102902/CO200F', 'Logic System Design'),
         ],
       ),
       'Assignment/ Assignment Test/ S...': _InternalMarkData(
         marks: [
-          _MarkRow('102923/CS200A', '12'),
-          _MarkRow('102921/MA200B', '13'),
-          _MarkRow('102924/EE200C', '14'),
+          _MarkRow('102903/MA200B', '15'),
+          _MarkRow('102903/CE200C', '40'),
+          _MarkRow('102902/CO200F', '15'),
         ],
         subjects: [
-          _SubjectDetail('102923/CS200A', 'Data Structures and Algorithms'),
-          _SubjectDetail('102921/MA200B', 'Discrete Mathematics'),
-          _SubjectDetail('102924/EE200C', 'Circuit Theory'),
+          _SubjectDetail(
+              '102903/MA200B', 'Complex Analysis and Linear Algebra'),
+          _SubjectDetail('102903/CE200C', 'Engineering Mechanics'),
+          _SubjectDetail('102902/CO200F', 'Logic System Design'),
         ],
       ),
       'Assignment-1/Assignment Test/...': _InternalMarkData(
