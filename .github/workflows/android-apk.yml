@@ -40,7 +40,10 @@ jobs:
         run: flutter analyze
 
       - name: Test
-        run: flutter test
+        # Pixel goldens are generated and checked on the development platform;
+        # Linux font rendering differs slightly. CI still runs all behavioral
+        # and responsive tests before producing the release APK.
+        run: flutter test --exclude-tags golden
 
       - name: Build universal release APK
         run: flutter build apk --release
