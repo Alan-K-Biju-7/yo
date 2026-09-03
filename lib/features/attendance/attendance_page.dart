@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/screen_shell.dart';
 import '../../data/api_service.dart';
 import '../../data/websocket_service.dart';
+import 'data/attendance_reference_repository.dart';
 
 class AttendancePage extends StatefulWidget {
   const AttendancePage({required this.sessionStore, super.key});
@@ -36,8 +37,17 @@ class _AttendancePageState extends State<AttendancePage> {
   void initState() {
     super.initState();
     _wsService = WebSocketService();
+    widget.sessionStore.addListener(_handleSessionUpgrade);
     _setupWebSocket();
     _loadAttendance();
+  }
+
+  void _handleSessionUpgrade() {
+    final token = widget.sessionStore.accessToken;
+    if (token != null && !ApiService.isOfflineToken(token)) {
+      _setupWebSocket();
+      _loadAttendance();
+    }
   }
 
   void _setupWebSocket() {
@@ -64,37 +74,71 @@ class _AttendancePageState extends State<AttendancePage> {
         widget.sessionStore.accessToken!,
       );
 
-      final rows = <AttendanceRow>[];
+      final rowsByDate = <String, List<String>>{
+        for (final record
+            in AttendanceReferenceRepository.recordsByClass[_classCode] ??
+                const <AttendanceRecord>[])
+          record.date: List<String>.from(record.periods),
+      };
 
-      // Convert API response to AttendanceRow format
+      // Keep the supplied reference timetable as the base and overlay live
+      // admin changes from the server period-by-period.
       attendanceData.forEach((date, records) {
-        final periods = <String>['', '', '', '', '', '', ''];
+        final periods = rowsByDate.putIfAbsent(
+          date,
+          () => <String>['', '', '', '', '', '', ''],
+        );
 
         for (final record in records) {
           final periodIndex = (record['period'] as int) - 1;
-          periods[periodIndex] = record['subject_code'];
+          if (periodIndex >= 0 && periodIndex < periods.length) {
+            periods[periodIndex] = record['subject_code'].toString();
+          }
         }
-
-        rows.add(AttendanceRow(date, periods));
       });
 
-      // Sort by date
-      rows.sort((a, b) => a.date.compareTo(b.date));
+      final rows = rowsByDate.entries
+          .map((entry) => AttendanceRow(entry.key, entry.value))
+          .toList();
+
+      // Sort chronologically even though the display format is MM/DD/YYYY.
+      rows.sort((a, b) => _dateSortKey(a.date).compareTo(_dateSortKey(b.date)));
 
       setState(() {
         _currentRows = rows;
         _isLoading = false;
       });
     } catch (e) {
+      final referenceRows =
+          AttendanceReferenceRepository.recordsByClass[_classCode] ??
+              const <AttendanceRecord>[];
       setState(() {
-        _errorMessage = 'Failed to load attendance: ${e.toString()}';
+        _currentRows = referenceRows
+            .map((record) => AttendanceRow(
+                  record.date,
+                  List<String>.from(record.periods),
+                ))
+            .toList();
+        _errorMessage = _currentRows.isEmpty
+            ? 'Failed to load attendance: ${e.toString()}'
+            : null;
         _isLoading = false;
       });
     }
   }
 
+  int _dateSortKey(String value) {
+    final parts = value.split('/');
+    if (parts.length != 3) return 0;
+    final month = int.tryParse(parts[0]) ?? 0;
+    final day = int.tryParse(parts[1]) ?? 0;
+    final year = int.tryParse(parts[2]) ?? 0;
+    return year * 10000 + month * 100 + day;
+  }
+
   @override
   void dispose() {
+    widget.sessionStore.removeListener(_handleSessionUpgrade);
     _wsService.disconnect();
     super.dispose();
   }
@@ -284,7 +328,8 @@ class _AttendanceCell extends StatelessWidget {
           fontSize: 13,
         ),
         textAlign: TextAlign.center,
-        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+        overflow: TextOverflow.clip,
       ),
     );
   }

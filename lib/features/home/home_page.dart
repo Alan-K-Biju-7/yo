@@ -3,15 +3,19 @@ import 'package:flutter/material.dart';
 import '../../core/session/session_store.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/reference_app_bar.dart';
+import '../../data/api_service.dart';
 import '../../data/reference_data.dart';
+import '../../data/websocket_service.dart';
 import '../attendance/attendance_page.dart';
 import '../auth/login_page.dart';
 import '../calendar/academic_calendar_page.dart';
+import '../comments/comments_remarks_page.dart';
 import '../documents/academic_documents_page.dart';
 import '../late_arrivals/late_arrivals_page.dart';
 import '../marks/internal_mark_page.dart';
 import '../notices/notice_list_page.dart';
 import '../profile/profile_page.dart';
+import '../semester/semester_mark_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -28,6 +32,60 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _visionExpanded = false;
+  bool _missionExpanded = false;
+  String _latestNoticeTitle = ReferenceData.notices.first.title;
+  final WebSocketService _noticeWebSocket = WebSocketService();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.sessionStore.addListener(_handleSessionUpdate);
+    _setupNoticeUpdates();
+    _loadLatestNotice();
+  }
+
+  void _handleSessionUpdate() {
+    _setupNoticeUpdates();
+    _loadLatestNotice();
+  }
+
+  void _setupNoticeUpdates() {
+    if (!widget.enableRealtime) return;
+    final token = widget.sessionStore.accessToken;
+    if (token == null || ApiService.isOfflineToken(token)) return;
+    _noticeWebSocket.onMessageReceived = (message) {
+      if (message['type'] == 'notice_added') _loadLatestNotice();
+    };
+    _noticeWebSocket.connect(token);
+    _noticeWebSocket.subscribe('notices');
+  }
+
+  Future<void> _loadLatestNotice() async {
+    if (!widget.enableRealtime) return;
+    final token = widget.sessionStore.accessToken;
+    if (token == null || ApiService.isOfflineToken(token)) return;
+
+    try {
+      final notices = await ApiService.getNotices(false, token);
+      if (!mounted || notices.isEmpty) return;
+      final latest = notices.first as Map<String, dynamic>;
+      final title = latest['title']?.toString().trim();
+      if (title != null && title.isNotEmpty && title != _latestNoticeTitle) {
+        setState(() => _latestNoticeTitle = title);
+      }
+    } catch (_) {
+      // Keep the bundled latest notice while offline or while Render wakes up.
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.sessionStore.removeListener(_handleSessionUpdate);
+    _noticeWebSocket.disconnect();
+    super.dispose();
+  }
+
   Future<void> _logout() async {
     await widget.sessionStore.signOut();
     if (!mounted) return;
@@ -61,6 +119,9 @@ class _HomePageState extends State<HomePage> {
       case 2:
         _open(InternalMarkPage(sessionStore: widget.sessionStore));
         return;
+      case 3:
+        _open(const SemesterMarkPage());
+        return;
       case 4:
         _open(AttendancePage(sessionStore: widget.sessionStore));
         return;
@@ -72,6 +133,9 @@ class _HomePageState extends State<HomePage> {
         return;
       case 7:
         _open(const AcademicDocumentsPage());
+        return;
+      case 8:
+        _open(const CommentsRemarksPage());
         return;
       default:
         return;
@@ -101,12 +165,39 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
                   sliver: SliverList.list(
                     children: [
+                      const StudentSummaryCard(),
+                      const SizedBox(height: 24),
+                      HomeExpansionCard(
+                        title: 'RSET Vision',
+                        body: ReferenceData.vision,
+                        expanded: _visionExpanded,
+                        onTap: () => setState(
+                          () => _visionExpanded = !_visionExpanded,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      HomeExpansionCard(
+                        title: 'RSET Mission',
+                        body: ReferenceData.mission,
+                        expanded: _missionExpanded,
+                        onTap: () => setState(
+                          () => _missionExpanded = !_missionExpanded,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _HomeNoticeCard(
+                        heading: 'Latest Notice',
+                        title: _latestNoticeTitle,
+                        height: 76,
+                        fullWidth: true,
+                      ),
+                      const SizedBox(height: 20),
                       const _HomeNoticeCard(
                         heading: 'Latest Exam Notice',
-                        title:
-                            'Sub: B.Tech. Minor Third Semester\n'
-                            '(2025 Admission) Course\n'
-                            'Registration:',
+                        title: 'B.Tech. Second, Fourth, Sixth and\n'
+                            'Eighth Semesters (2021and 2022\n'
+                            'Admissions) Supplementary\n'
+                            'Examinations – Registration.',
                         fullWidth: true,
                       ),
                       const SizedBox(height: 20),
@@ -126,10 +217,9 @@ class _HomePageState extends State<HomePage> {
                             ),
                             itemBuilder: (context, index) {
                               final item = ReferenceData.features[index];
-                              final enabled = !{3, 8}.contains(index);
                               return _FeatureTile(
                                 item: item,
-                                enabled: enabled,
+                                enabled: true,
                                 onTap: () => _openFeature(index),
                               );
                             },
@@ -312,17 +402,19 @@ class _HomeNoticeCard extends StatelessWidget {
   const _HomeNoticeCard({
     required this.heading,
     required this.title,
+    this.height = 128,
     this.fullWidth = false,
   });
 
   final String heading;
   final String title;
+  final double height;
   final bool fullWidth;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 128,
+      height: height,
       child: Card(
         margin: EdgeInsets.zero,
         elevation: 5,
@@ -391,14 +483,23 @@ class _FeatureTile extends StatelessWidget {
             children: [
               Icon(item.icon, size: 28, color: AppColors.primary),
               const SizedBox(height: 10),
-              Text(
-                item.label,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                style: const TextStyle(
-                  fontSize: 16,
-                  height: 1.3,
-                  fontWeight: FontWeight.w700,
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.topCenter,
+                  child: Text(
+                    item.label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.clip,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      height: 1.3,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
             ],

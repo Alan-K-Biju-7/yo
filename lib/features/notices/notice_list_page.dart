@@ -5,6 +5,7 @@ import '../../core/session/session_store.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/screen_shell.dart';
 import '../../data/api_service.dart';
+import '../../data/reference_data.dart' as reference;
 import '../../data/websocket_service.dart';
 
 class NoticeListPage extends StatefulWidget {
@@ -47,7 +48,11 @@ class NoticeRecord {
 }
 
 class _NoticeListPageState extends State<NoticeListPage> {
+  // The supplied lists use different page sizes for general and exam notices.
+  int get _pageSize => widget.examNotices ? 4 : 9;
+
   List<NoticeRecord> _notices = [];
+  int _currentPage = 0;
   bool _isLoading = true;
   String? _errorMessage;
   late WebSocketService _wsService;
@@ -56,12 +61,40 @@ class _NoticeListPageState extends State<NoticeListPage> {
   void initState() {
     super.initState();
     _wsService = WebSocketService();
+    widget.sessionStore.addListener(_handleSessionUpgrade);
     if (widget.enableRealtime) {
       _setupWebSocket();
       _loadNotices();
     } else {
+      _notices = _referenceNotices();
       _isLoading = false;
     }
+  }
+
+  void _handleSessionUpgrade() {
+    final token = widget.sessionStore.accessToken;
+    if (widget.enableRealtime &&
+        token != null &&
+        !ApiService.isOfflineToken(token)) {
+      _setupWebSocket();
+      _loadNotices();
+    }
+  }
+
+  List<NoticeRecord> _referenceNotices() {
+    final source = widget.examNotices
+        ? reference.ReferenceData.examNotices
+        : reference.ReferenceData.notices;
+    final visibleSource = source.take(_pageSize * 2).toList();
+    return [
+      for (var index = 0; index < visibleSource.length; index++)
+        NoticeRecord(
+          id: 'reference-$index',
+          title: visibleSource[index].title,
+          date: visibleSource[index].date,
+          fileUrl: '',
+        ),
+    ];
   }
 
   void _setupWebSocket() {
@@ -88,16 +121,29 @@ class _NoticeListPageState extends State<NoticeListPage> {
         widget.sessionStore.accessToken!,
       );
 
-      final records =
+      final liveRecords =
           noticesList.map((json) => NoticeRecord.fromJson(json)).toList();
+      // Keep server order (newest first) and use the bundled records only as
+      // an offline/reference fallback. A newly uploaded notice must appear on
+      // the first page immediately after the WebSocket-triggered reload.
+      final records = [...liveRecords];
+      final knownTitles = records.map((record) => record.title).toSet();
+      records.addAll(
+        _referenceNotices().where(
+          (record) => !knownTitles.contains(record.title),
+        ),
+      );
 
       setState(() {
         _notices = records;
+        _currentPage = 0;
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load notices: ${e.toString()}';
+        _notices = _referenceNotices();
+        _errorMessage =
+            _notices.isEmpty ? 'Failed to load notices: ${e.toString()}' : null;
         _isLoading = false;
       });
     }
@@ -105,12 +151,17 @@ class _NoticeListPageState extends State<NoticeListPage> {
 
   @override
   void dispose() {
+    widget.sessionStore.removeListener(_handleSessionUpgrade);
     _wsService.disconnect();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final pageCount = (_notices.length / _pageSize).ceil();
+    final pageStart = _currentPage * _pageSize;
+    final visibleNotices = _notices.skip(pageStart).take(_pageSize).toList();
+
     return ScreenShell(
       title: widget.examNotices ? 'Exam Notices' : 'Notices',
       child: _isLoading
@@ -147,16 +198,30 @@ class _NoticeListPageState extends State<NoticeListPage> {
                         ],
                       ),
                     )
-                  : ListView.separated(
-                      key: PageStorageKey<String>(
-                        widget.examNotices ? 'exam-notices' : 'notices',
-                      ),
-                      padding: const EdgeInsets.fromLTRB(15, 26, 15, 95),
-                      itemCount: _notices.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 19),
-                      itemBuilder: (context, index) =>
-                          _NoticeCard(record: _notices[index]),
+                  : Column(
+                      children: [
+                        Expanded(
+                          child: ListView.separated(
+                            key: PageStorageKey<String>(
+                              '${widget.examNotices ? 'exam' : 'general'}-'
+                              'notices-page-$_currentPage',
+                            ),
+                            padding: const EdgeInsets.fromLTRB(15, 26, 15, 20),
+                            itemCount: visibleNotices.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 19),
+                            itemBuilder: (context, index) =>
+                                _NoticeCard(record: visibleNotices[index]),
+                          ),
+                        ),
+                        if (pageCount > 1)
+                          _PaginationBar(
+                            currentPage: _currentPage,
+                            pageCount: pageCount,
+                            onPageSelected: (page) =>
+                                setState(() => _currentPage = page),
+                          ),
+                      ],
                     ),
     );
   }
@@ -186,8 +251,6 @@ class _NoticeCard extends StatelessWidget {
                   Text(
                     record.title,
                     style: const TextStyle(fontSize: 20, height: 1.35),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -202,24 +265,94 @@ class _NoticeCard extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             InkWell(
-              onTap: () async {
-                final opened = await launchUrl(
-                  ApiService.fileUri(record.fileUrl),
-                  mode: LaunchMode.externalApplication,
-                );
-                if (!opened && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Unable to open this PDF')),
-                  );
-                }
-              },
+              onTap: record.fileUrl.isEmpty
+                  ? null
+                  : () async {
+                      final opened = await launchUrl(
+                        ApiService.fileUri(record.fileUrl),
+                        mode: LaunchMode.externalApplication,
+                      );
+                      if (!opened && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Unable to open this PDF')),
+                        );
+                      }
+                    },
               child: const Icon(
-                Icons.picture_as_pdf,
+                Icons.notifications_active,
                 color: AppColors.primary,
                 size: 30,
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PaginationBar extends StatelessWidget {
+  const _PaginationBar({
+    required this.currentPage,
+    required this.pageCount,
+    required this.onPageSelected,
+  });
+
+  final int currentPage;
+  final int pageCount;
+  final ValueChanged<int> onPageSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                onPressed: currentPage > 0
+                    ? () => onPageSelected(currentPage - 1)
+                    : null,
+                icon: const Icon(Icons.chevron_left),
+              ),
+              for (var page = 0; page < pageCount; page++)
+                InkWell(
+                  onTap: () => onPageSelected(page),
+                  borderRadius: BorderRadius.circular(28),
+                  child: Container(
+                    width: 46,
+                    height: 46,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: page == currentPage
+                          ? const Color(0xFF6F687D)
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '${page + 1}',
+                      style: TextStyle(
+                        color: page == currentPage
+                            ? Colors.white
+                            : AppColors.purple,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ),
+              IconButton(
+                onPressed: currentPage + 1 < pageCount
+                    ? () => onPageSelected(currentPage + 1)
+                    : null,
+                icon: const Icon(Icons.chevron_right),
+              ),
+            ],
+          ),
         ),
       ),
     );

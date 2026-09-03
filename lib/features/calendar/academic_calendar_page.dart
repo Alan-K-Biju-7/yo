@@ -21,7 +21,7 @@ class EventRecord {
   final String date;
   final String? description;
 
-  EventRecord({
+  const EventRecord({
     required this.id,
     required this.title,
     required this.date,
@@ -37,6 +37,84 @@ class EventRecord {
     );
   }
 }
+
+const _referenceEvents = <EventRecord>[
+  EventRecord(id: 'ref-0731', title: 'Techkshetra 2026', date: '07/31/2026'),
+  EventRecord(
+      id: 'ref-0808',
+      title: 'Open House and Honours/Minor Internal Examination',
+      date: '08/08/2026'),
+  EventRecord(
+      id: 'ref-0812',
+      title: 'Karkkidaka Vavu',
+      date: '08/12/2026',
+      description: 'Holiday'),
+  EventRecord(
+      id: 'ref-0815',
+      title: 'Independence Day',
+      date: '08/15/2026',
+      description: 'Holiday'),
+  EventRecord(id: 'ref-0821', title: 'Onam Celebration', date: '08/21/2026'),
+  EventRecord(
+      id: 'ref-0824',
+      title: 'Onam Holidays',
+      date: '08/24/2026',
+      description: 'Holiday'),
+  EventRecord(
+      id: 'ref-0825',
+      title: 'ഒന്നാം ഓണം',
+      date: '08/25/2026',
+      description: 'Holiday'),
+  EventRecord(
+      id: 'ref-0826',
+      title: 'തിരുവോണം',
+      date: '08/26/2026',
+      description: 'Holiday'),
+  EventRecord(
+      id: 'ref-0827',
+      title: 'മൂന്നാം ഓണം',
+      date: '08/27/2026',
+      description: 'Holiday'),
+  EventRecord(
+      id: 'ref-0828',
+      title: 'ശ്രീ നാരായണ ഗുരു ജയന്തി',
+      date: '08/28/2026',
+      description: 'Holiday'),
+  EventRecord(
+      id: 'ref-0829',
+      title: 'Onam Holidays',
+      date: '08/29/2026',
+      description: 'Holiday'),
+  EventRecord(id: 'ref-0902', title: 'Confluence 3.0', date: '09/02/2026'),
+  EventRecord(
+      id: 'ref-0904',
+      title: 'Sri Krishna Jayanthi',
+      date: '09/04/2026',
+      description: 'Holiday'),
+  EventRecord(
+      id: 'ref-0921',
+      title: 'Sree Narayanaguru Samadhi',
+      date: '09/21/2026',
+      description: 'Holiday'),
+  EventRecord(
+      id: 'ref-0930', title: 'Semester ends for S3/S5/S7', date: '09/30/2026'),
+  EventRecord(
+      id: 'ref-1002',
+      title: 'Gandhi Jayanthi',
+      date: '10/02/2026',
+      description: 'Holiday'),
+  EventRecord(id: 'ref-1012', title: 'ESE-Theory', date: '10/12/2026'),
+  EventRecord(
+      id: 'ref-1020',
+      title: 'Maha Navami',
+      date: '10/20/2026',
+      description: 'Holiday'),
+  EventRecord(
+      id: 'ref-1021',
+      title: 'Vijaya Dasami',
+      date: '10/21/2026',
+      description: 'Holiday'),
+];
 
 class _AcademicCalendarPageState extends State<AcademicCalendarPage> {
   static const _monthNames = [
@@ -55,10 +133,11 @@ class _AcademicCalendarPageState extends State<AcademicCalendarPage> {
   ];
   static const _weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  DateTime _month = DateTime(2026, 7);
-  DateTime _selected = DateTime(2026, 7, 28);
-  List<EventRecord> _allEvents = [];
-  Set<String> _datesWithEvents = {};
+  DateTime _month = DateTime(2026, 8);
+  DateTime _selected = DateTime(2026, 7, 31);
+  List<EventRecord> _allEvents = List.of(_referenceEvents);
+  Set<String> _datesWithEvents =
+      _referenceEvents.map((event) => event.date).toSet();
   bool _isLoading = true;
   late WebSocketService _wsService;
 
@@ -66,8 +145,17 @@ class _AcademicCalendarPageState extends State<AcademicCalendarPage> {
   void initState() {
     super.initState();
     _wsService = WebSocketService();
+    widget.sessionStore.addListener(_handleSessionUpgrade);
     _setupWebSocket();
     _loadEvents();
+  }
+
+  void _handleSessionUpgrade() {
+    final token = widget.sessionStore.accessToken;
+    if (token != null && !ApiService.isOfflineToken(token)) {
+      _setupWebSocket();
+      _loadEvents();
+    }
   }
 
   void _setupWebSocket() {
@@ -88,8 +176,15 @@ class _AcademicCalendarPageState extends State<AcademicCalendarPage> {
         widget.sessionStore.accessToken!,
       );
 
-      final events =
+      final remoteEvents =
           eventsList.map((json) => EventRecord.fromJson(json)).toList();
+      final events = <EventRecord>[..._referenceEvents];
+      for (final remote in remoteEvents) {
+        final duplicate = events.any(
+          (event) => event.date == remote.date && event.title == remote.title,
+        );
+        if (!duplicate) events.add(remote);
+      }
 
       final dates = <String>{};
       for (final event in events) {
@@ -121,6 +216,7 @@ class _AcademicCalendarPageState extends State<AcademicCalendarPage> {
 
   @override
   void dispose() {
+    widget.sessionStore.removeListener(_handleSessionUpgrade);
     _wsService.disconnect();
     super.dispose();
   }
@@ -191,6 +287,7 @@ class _AcademicCalendarPageState extends State<AcademicCalendarPage> {
                 : _MonthGrid(
                     month: _month,
                     selected: _selected,
+                    today: DateTime.now(),
                     onSelected: (date) => setState(() => _selected = date),
                     datesWithEvents: _datesWithEvents,
                   ),
@@ -199,48 +296,60 @@ class _AcademicCalendarPageState extends State<AcademicCalendarPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, bottom: 12),
-                    child: Text(
-                      'Events for ${_selected.day}/${_selected.month}/${_selected.year}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                   for (final event in _getEventsForDate(_selected))
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Card(
+                      child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 16),
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                event.title,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              if (event.description != null &&
-                                  event.description!.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(
-                                    event.description!,
+                        padding: const EdgeInsets.fromLTRB(20, 20, 18, 20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF8FF),
+                          border:
+                              Border.all(color: AppColors.primary, width: 2),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x33000000),
+                              blurRadius: 6,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    event.title,
                                     style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF5C575E),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                ),
-                            ],
-                          ),
+                                  if (event.description != null &&
+                                      event.description!.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        event.description!,
+                                        style: const TextStyle(
+                                          fontSize: 17,
+                                          fontStyle: FontStyle.italic,
+                                          color: Color(0xFF438EF5),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.calendar_month_outlined,
+                              color: AppColors.primary,
+                              size: 30,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -257,12 +366,14 @@ class _MonthGrid extends StatelessWidget {
   const _MonthGrid({
     required this.month,
     required this.selected,
+    required this.today,
     required this.onSelected,
     required this.datesWithEvents,
   });
 
   final DateTime month;
   final DateTime selected;
+  final DateTime today;
   final ValueChanged<DateTime> onSelected;
   final Set<String> datesWithEvents;
 
@@ -297,6 +408,9 @@ class _MonthGrid extends StatelessWidget {
         final isSelected = date.year == selected.year &&
             date.month == selected.month &&
             date.day == selected.day;
+        final isToday = date.year == today.year &&
+            date.month == today.month &&
+            date.day == today.day;
         final specialBlue = inMonth &&
             (date.weekday == DateTime.sunday ||
                 (date.year == 2026 &&
@@ -315,14 +429,18 @@ class _MonthGrid extends StatelessWidget {
                 height: 44,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF438EF5) : null,
+                  color: isSelected
+                      ? const Color(0xFF1455AD)
+                      : isToday
+                          ? const Color(0xFF438EF5)
+                          : null,
                   borderRadius: BorderRadius.circular(7),
                 ),
                 child: Text(
                   '${date.day}',
                   style: TextStyle(
                     fontSize: 17,
-                    color: isSelected
+                    color: isSelected || isToday
                         ? Colors.white
                         : !inMonth
                             ? const Color(0xFFB3AFB3)

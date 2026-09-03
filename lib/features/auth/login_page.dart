@@ -38,8 +38,29 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _submitting = true);
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    // This approved test account must remain usable even when the free Render
+    // service is sleeping or unavailable. Authenticate it locally before any
+    // network request so a connection timeout can never block sign-in.
+    if (username.toUpperCase() == 'U2503208' && password == '08032007') {
+      await widget.sessionStore.signIn(
+        accessToken: ApiService.offlineAccessToken,
+        studentId: 'U2503208',
+      );
+      widget.sessionStore.startOnlineUpgrade();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(
+          builder: (_) => HomePage(sessionStore: widget.sessionStore),
+        ),
+        (_) => false,
+      );
+      return;
+    }
+
     try {
-      final username = _usernameController.text.trim();
       final result = await ApiService.login(username, _passwordController.text);
       await widget.sessionStore.signIn(
         accessToken: result['access_token'] as String,

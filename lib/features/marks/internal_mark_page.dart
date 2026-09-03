@@ -32,6 +32,12 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
     '102908/ME900D': 'Engineering Graphics',
     '102902/CO200F': 'Logic System Design',
     '102906/CO922S-B2': 'Manufacturing Practice',
+    '102903/CO300B': 'Data Structures',
+    '102908/EN900E': 'Communication Skills for Professionals',
+    '102908/CO900G': 'Environmental Science and Sustainable Engineering',
+    '102802/CO300A': 'Object oriented programming concepts using Java',
+    '102903/MA300C': 'Discrete Mathematics',
+    '102902/CO300D': 'Computer Organization and Architecture',
   };
 
   static List<String> get _filteredExamTypes {
@@ -53,6 +59,38 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
   }
 
   static const _dataByClassAndExam = {
+    '2026S3CS-C': {
+      'Internal Exam 1': _InternalMarkData(
+        marks: [
+          _MarkRow('102802/CO300A', '35'),
+          _MarkRow('102903/CO300B', '41.5'),
+          _MarkRow('102903/MA300C', '50'),
+          _MarkRow('102902/CO300D', '33'),
+          _MarkRow('102908/EN900E', '43'),
+          _MarkRow('102908/CO900G', '32'),
+        ],
+        subjects: [
+          _SubjectDetail(
+            '102802/CO300A',
+            'Object oriented programming concepts using Java',
+          ),
+          _SubjectDetail('102903/CO300B', 'Data Structures'),
+          _SubjectDetail('102903/MA300C', 'Discrete Mathematics'),
+          _SubjectDetail(
+            '102902/CO300D',
+            'Computer Organization and Architecture',
+          ),
+          _SubjectDetail(
+            '102908/EN900E',
+            'Communication Skills for Professionals',
+          ),
+          _SubjectDetail(
+            '102908/CO900G',
+            'Environmental Science and Sustainable Engineering',
+          ),
+        ],
+      ),
+    },
     '2026S2CS-C': {
       'Internal Exam 1': _InternalMarkData(
         marks: [
@@ -281,12 +319,22 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
   void initState() {
     super.initState();
     _wsService = WebSocketService();
+    widget.sessionStore.addListener(_handleSessionUpgrade);
     _wsService.onMessageReceived = (message) {
       if (message['type'] == 'marks_updated') _loadMarks();
     };
     _wsService.connect(widget.sessionStore.accessToken!);
     _wsService.subscribe('marks');
     _loadMarks();
+  }
+
+  void _handleSessionUpgrade() {
+    final token = widget.sessionStore.accessToken;
+    if (token != null && !ApiService.isOfflineToken(token)) {
+      _wsService.connect(token);
+      _wsService.subscribe('marks');
+      _loadMarks();
+    }
   }
 
   Future<void> _loadMarks() async {
@@ -304,13 +352,19 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
                 item['mark'].toString(),
               ))
           .toList();
+      final bundledData = _dataByClassAndExam[_classCode]?[_liveExamType];
+      final mergedMarks = <String, _MarkRow>{
+        for (final mark in bundledData?.marks ?? const <_MarkRow>[])
+          mark.subjectCode: mark,
+        for (final mark in marks) mark.subjectCode: mark,
+      }.values.toList();
       if (!mounted) return;
       setState(() {
-        _liveData = marks.isEmpty
+        _liveData = mergedMarks.isEmpty
             ? null
             : _InternalMarkData(
-                marks: marks,
-                subjects: marks
+                marks: mergedMarks,
+                subjects: mergedMarks
                     .map((mark) => _SubjectDetail(
                           mark.subjectCode,
                           _subjectNames[mark.subjectCode] ?? mark.subjectCode,
@@ -324,7 +378,14 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _loadError = error.toString().replaceFirst('Exception: ', '');
+        final isOffline =
+            ApiService.isOfflineToken(widget.sessionStore.accessToken!);
+        if (isOffline &&
+            _dataByClassAndExam[_classCode]?[_liveExamType] != null) {
+          _examType = _liveExamType;
+        }
+        _loadError =
+            isOffline ? null : error.toString().replaceFirst('Exception: ', '');
         _loading = false;
       });
     }
@@ -332,6 +393,7 @@ class _InternalMarkPageState extends State<InternalMarkPage> {
 
   @override
   void dispose() {
+    widget.sessionStore.removeListener(_handleSessionUpgrade);
     _wsService.disconnect();
     super.dispose();
   }

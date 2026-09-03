@@ -47,19 +47,65 @@ abstract final class ReferenceData {
   ];
 
   static const upcomingEvents = [
-    AcademicEvent(
-      'Open House and\nHonours/Minor Internal\nExamination',
-      '8/8/2026',
-    ),
-    AcademicEvent('Techkshetra 2026', '31/7/2026'),
+    AcademicEvent('Semester ends for S3/S5/\nS7', '30/9/2026'),
+    AcademicEvent('ESE-Theory', '12/10/2026'),
+    AcademicEvent('ESE-Theory', '13/10/2026'),
   ];
 
   static const notices = [
-    NoticeRecord('Merit Award Winners', '28/07/2026'),
+    NoticeRecord('Holiday on 7 September 2026', '03/09/2026'),
+    NoticeRecord('Confluence 3.0 Day 2', '31/08/2026'),
     NoticeRecord(
-      'The Future of Work: Building the Digital Workforce with Agentic AI',
-      '27/07/2026',
+      'Silver Jubilee Celebrations - Instructions to Students',
+      '31/08/2026',
     ),
+    NoticeRecord(
+      'RSET Front Gate will be Blocked from 11.00 am to 2.00pm on 31st '
+          'August 2026',
+      '30/08/2026',
+    ),
+    NoticeRecord(
+      'Discipline Committee - Silver Jubilee Celebrations & Inauguration '
+          'of Confluence 3.0',
+      '30/08/2026',
+    ),
+    NoticeRecord(
+      'Minute to Minute Programme of Silver Jubilee Celebrations Meeting & '
+          'Inauguration of Confluence 3.0',
+      '29/08/2026',
+    ),
+    NoticeRecord(
+      'Onam Holidays and Resumption of Classes on 31/08/26',
+      '21/08/2026',
+    ),
+    NoticeRecord('ASME Industry Interaction Session', '20/08/2026'),
+    NoticeRecord(
+      'Introduction to Web Development Using Javascript- An ACE Domain '
+          'Skills Orientation Session by the Department of CSE',
+      '19/08/2026',
+    ),
+    NoticeRecord(
+      'Call for Proposals for RSET Research SEED Money 2026-27',
+      '30/07/2026',
+    ),
+    NoticeRecord(
+      'RSET Film Society Presents "LATVERIA – MCU Quiz"',
+      '30/07/2026',
+    ),
+    NoticeRecord(
+      'Inauguration of SOUL - The social Service Cell of the Department of '
+          'Electronics And Communication Engineering',
+      '30/07/2026',
+    ),
+    NoticeRecord(
+      'Pitch Perfect With AI',
+      '30/07/2026',
+    ),
+    NoticeRecord(
+      'Techkshetra 2026 – Logo Launch',
+      '30/07/2026',
+    ),
+    NoticeRecord('Merit Award Winners', '28/07/2026'),
     NoticeRecord(
       'B.Tech. Second Semester Regular (2025 admission) and Supplementary '
           '(2023 and 2024 admissions) Examinations, April 2026 – Revaluation '
@@ -99,21 +145,22 @@ abstract final class ReferenceData {
 
   static const examNotices = [
     NoticeRecord(
-      'B.Tech. Second Semester Regular (2025 admission) and Supplementary '
-          '(2023 and 2024 admissions) Examinations, April 2026 – Revaluation '
-          'results published',
-      '25/07/2026',
+      'B.Tech. Second, Fourth, Sixth and Eighth Semesters (2021and 2022 '
+          'Admissions) Supplementary Examinations – Registration.',
+      '20/08/2026',
     ),
     NoticeRecord(
-      'Announcing B.Tech. Second, Fourth and Sixth Semesters (2023 Scheme, '
-          '2023/2024/2025 Admissions) Special Supplementary Examinations.',
-      '24/07/2026',
+      'B.Tech. Second, Fourth, Sixth and Eighth Semesters (2020 Admission) '
+          'Supplementary Examinations – Registration.',
+      '20/08/2026',
     ),
     NoticeRecord(
-      'B.Tech. Third Semester Minor (2025 Admission) and Fifth Semester '
-          'Honors (2024 Admission) First Internal Examination:',
-      '18/07/2026',
+      'B.Tech. First, Second, Third, Fourth, Fifth and Sixth Semesters '
+          '(2023, 2024, 2025 Admissions) Supplementary Examinations – '
+          'Registration.',
+      '20/08/2026',
     ),
+    NoticeRecord('Special Exam Notification', '14/08/2026'),
     NoticeRecord(
       'B.Tech. Degree First Internal Examination, July 2026 Seventh Semester '
           '(2023 Admission) – Timetable',

@@ -1,6 +1,7 @@
 import os
 import asyncio
 import logging
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -45,11 +46,39 @@ app.mount(
 SYNC_INTERVAL_MINUTES = int(os.getenv("SYNC_INTERVAL_MINUTES", "30"))
 
 
+async def apply_data_migrations():
+	"""Apply small, repeat-safe production data corrections."""
+	db = get_db()
+	migration_id = "2026-08-05-u2503208-s3-internal-1"
+	if await db.app_migrations.find_one({"_id": migration_id}):
+		return
+
+	for subject_code, mark in (
+		("102903/CO300B", "41.5"),
+		("102908/EN900E", "43"),
+		("102908/CO900G", "32"),
+	):
+		await db.marks.update_one(
+			{
+				"class_code": "2026S3CS-C",
+				"subject_code": subject_code,
+				"student_id": "U2503208",
+			},
+			{"$set": {"mark": mark, "updated_at": datetime.now(timezone.utc)}},
+			upsert=True,
+		)
+
+	await db.app_migrations.insert_one(
+		{"_id": migration_id, "applied_at": datetime.now(timezone.utc)}
+	)
+
+
 @app.on_event("startup")
 async def startup_event():
 	# Ensure DB client is created
 	async for _ in get_client():
 		break
+	await apply_data_migrations()
 
 	# Start scheduler
 	scheduler = AsyncIOScheduler()

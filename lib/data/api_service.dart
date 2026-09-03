@@ -3,16 +3,27 @@ import 'dart:convert';
 
 class ApiService {
   static const Duration requestTimeout = Duration(seconds: 90);
+  static const Duration loginTimeout = Duration(seconds: 12);
+  static const String offlineAccessToken = 'rset-parent-offline-session';
 
   static const String serverOrigin = String.fromEnvironment(
     'SERVER_ORIGIN',
-    defaultValue: 'http://10.0.2.2:8000',
+    defaultValue: 'https://rset-student-api.onrender.com',
   );
   static const String baseUrl = '$serverOrigin/api/mobile';
 
   static Map<String, String> _headers(String authToken) => {
         'Authorization': 'Bearer $authToken',
       };
+
+  static bool isOfflineToken(String authToken) =>
+      authToken == offlineAccessToken;
+
+  static void _requireOnlineToken(String authToken) {
+    if (isOfflineToken(authToken)) {
+      throw Exception('Offline mode');
+    }
+  }
 
   static Future<Map<String, dynamic>> login(
     String username,
@@ -22,7 +33,7 @@ class ApiService {
       Uri.parse('$serverOrigin/api/auth/token'),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {'username': username, 'password': password},
-    ).timeout(requestTimeout);
+    ).timeout(loginTimeout);
 
     if (response.statusCode != 200) {
       throw Exception(response.statusCode == 401
@@ -40,6 +51,7 @@ class ApiService {
     String classCode,
     String authToken,
   ) async {
+    _requireOnlineToken(authToken);
     try {
       final response = await http
           .get(
@@ -63,6 +75,7 @@ class ApiService {
     String classCode,
     String authToken,
   ) async {
+    _requireOnlineToken(authToken);
     try {
       final response = await http
           .get(
@@ -85,6 +98,7 @@ class ApiService {
     bool isExamNotice,
     String authToken,
   ) async {
+    _requireOnlineToken(authToken);
     try {
       final response = await http
           .get(
@@ -104,6 +118,7 @@ class ApiService {
   }
 
   static Future<List<dynamic>> getAllEvents(String authToken) async {
+    _requireOnlineToken(authToken);
     try {
       final response = await http
           .get(
@@ -126,6 +141,7 @@ class ApiService {
     String date,
     String authToken,
   ) async {
+    _requireOnlineToken(authToken);
     try {
       final response = await http
           .get(

@@ -11,6 +11,8 @@ import 'package:rset_student_app/features/late_arrivals/late_arrivals_page.dart'
 import 'package:rset_student_app/features/marks/internal_mark_page.dart';
 import 'package:rset_student_app/features/notices/notice_list_page.dart';
 import 'package:rset_student_app/features/profile/profile_page.dart';
+import 'package:rset_student_app/features/rewards/reward_details_page.dart';
+import 'package:rset_student_app/features/semester/semester_mark_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -24,7 +26,9 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       SharedPreferences.setMockInitialValues({
         'signed_in': true,
-        'access_token': 'test-token',
+        // Keep visual/layout tests deterministic and free of real network
+        // sockets now that production is the default server.
+        'access_token': 'rset-parent-offline-session',
         'student_id': 'test-student',
       });
       final sessionStore = await SessionStore.load();
@@ -33,6 +37,8 @@ void main() {
         LoginPage(sessionStore: sessionStore),
         HomePage(sessionStore: sessionStore),
         const ProfilePage(),
+        const RewardDetailsPage(),
+        const SemesterMarkPage(),
         AttendancePage(sessionStore: sessionStore),
         NoticeListPage(sessionStore: sessionStore),
         NoticeListPage(sessionStore: sessionStore, examNotices: true),

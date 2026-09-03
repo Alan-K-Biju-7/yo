@@ -6,7 +6,7 @@ import 'dart:async';
 class WebSocketService {
   static const String serverOrigin = String.fromEnvironment(
     'SERVER_ORIGIN',
-    defaultValue: 'http://10.0.2.2:8000',
+    defaultValue: 'https://rset-student-api.onrender.com',
   );
 
   WebSocketChannel? _channel;
@@ -21,6 +21,7 @@ class WebSocketService {
   bool get isConnected => _channel != null;
 
   Future<void> connect(String authToken) async {
+    if (authToken == 'rset-parent-offline-session') return;
     _authToken = authToken;
     _manuallyDisconnected = false;
     _reconnectTimer?.cancel();
